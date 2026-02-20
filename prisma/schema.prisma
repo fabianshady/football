@@ -1,0 +1,80 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id        String   @id @default(uuid())
+  name      String
+  dorsal    Int
+  positions String[]
+  active    Boolean  @default(true)
+
+  payments    Payment[]
+  matchSquads MatchSquad[]
+  goals       Goal[]
+
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id       String   @id @default(uuid())
+  name     String
+  cost     Float
+  date     DateTime
+
+  payments Payment[]
+}
+
+model Payment {
+  id       String  @id @default(uuid())
+  paid     Boolean @default(false)
+
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId String
+
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
+
+  @@unique([playerId, eventId])
+}
+
+model Match {
+  id        String   @id @default(uuid())
+  myTeam    String
+  rivalTeam String
+  myPos     Int
+  rivalPos  Int
+  date      DateTime
+  location  String
+  scoreHome Int      @default(0)
+  scoreAway Int      @default(0)
+
+  squad MatchSquad[]
+  goals Goal[]
+}
+
+model MatchSquad {
+  id       String @id @default(uuid())
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId  String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId String
+
+  @@unique([matchId, playerId])
+}
+
+model Goal {
+  id       String @id @default(uuid())
+  minute   Int?
+
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId  String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId String
+}
