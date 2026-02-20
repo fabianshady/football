@@ -1,0 +1,36 @@
+name: PR Check Bien Vergas
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  testeo-y-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bajar el código, güey
+        uses: actions/checkout@v4
+
+      - name: Poner Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar chingaderas (dependencias)
+        run: npm i
+
+      - name: Checar que no escriban con las patas (Lint)
+        run: npm run lint
+
+      - name: Checar tipado estricto
+        run: npx tsc --noEmit
+
+      - name: Generar Prisma
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+
+      - name: Calar el Build
+        run: npm run build
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
