@@ -17,7 +17,7 @@ async function getStats() {
   })
 
   // Obtener los clubes únicos (myTeam)
-  const clubNames = Array.from(new Set(matches.map((m) => m.myTeam)))
+  const clubNames = Array.from(new Set(matches.toReversed().map((m) => m.myTeam)))
 
   // Calcular stats por club
   const clubStats: ClubStats[] = clubNames.map((clubName) => {
