@@ -1,14 +1,16 @@
-name: PR Check Bien Vergas
+name: CI/CD Pipeline
 
 on:
   pull_request:
+    branches: [ "main" ]
+  push:
     branches: [ "main" ]
 
 jobs:
   testeo-y-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Bajar el código, güey
+      - name: Bajar el código, we
         uses: actions/checkout@v4
 
       - name: Poner Node.js
@@ -34,3 +36,17 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    needs: testeo-y-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Copiar archivos al servidor
+        run: rsync -av --delete . /home/fabianshady/Projects/agenda/app_futbol_public/
+
+      - name: Deploy with Docker Compose
+        working-directory: /home/fabianshady/Projects/agenda/compose
+        run: docker compose --profile football-apps up -d --build  
