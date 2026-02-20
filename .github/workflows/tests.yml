@@ -17,7 +17,7 @@ jobs:
           node-version: '20'
 
       - name: Instalar chingaderas (dependencias)
-        run: npm i
+        run: npm ci
 
       - name: Checar que no escriban con las patas (Lint)
         run: npm run lint
