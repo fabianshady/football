@@ -10,11 +10,11 @@ RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 
 # Install all dependencies (dev included, needed for build stage)
 # --ignore-scripts prevents postinstall hooks from running prematurely
-RUN npm install --ignore-scripts
+RUN npm ci --ignore-scripts
 
 # =============================================================================
 # STAGE 2: BUILDER
