@@ -1,0 +1,53 @@
+name: Preview Docker Image Build
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+       - '**.md'
+       - '.github/**'
+       - '.gitignore'
+       - '.dockerignore'
+jobs:
+  testeo-y-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bajar el código, we
+        uses: actions/checkout@v4
+
+      - name: Poner Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar chingaderas (dependencias)
+        run: npm ci
+
+      - name: Checar que no escriban con las patas (Lint)
+        run: npm run lint
+
+      - name: Checar tipado estricto
+        run: npx tsc --noEmit
+
+      - name: Generar Prisma
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+
+      - name: Calar el Build
+        run: npm run build
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+
+      - name: Comentar éxito en el PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ ¡Todo salió bien! Este PR está listo para merge.'
+            })
