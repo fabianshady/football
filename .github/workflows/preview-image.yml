@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths-ignore:
-       - '**.md'
-       - '.github/**'
-       - '.gitignore'
-       - '.dockerignore'
+      - '**.md'
+      - '.github/**'
+      - '.gitignore'
+      - '.dockerignore'
 jobs:
   testeo-y-build:
     runs-on: ubuntu-latest
