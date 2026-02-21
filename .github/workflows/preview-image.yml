@@ -40,14 +40,23 @@ jobs:
         env:
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
-      - name: Comentar éxito en el PR
+      - name: Comentar resultado del PR
+        if: always()
         uses: actions/github-script@v7
+        env:
+          JOB_STATUS: ${{ job.status }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const jobStatus = process.env.JOB_STATUS;
+            const isSuccess = jobStatus === 'success';
+            const body = isSuccess
+              ? '✅ ¡Todo salió bien! Este PR está listo para merge.'
+              : `❌ Algunas verificaciones fallaron en este PR. Revisa los checks de GitHub Actions (estado del job: ${jobStatus}).`;
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '✅ ¡Todo salió bien! Este PR está listo para merge.'
+              body
             })
