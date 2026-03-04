@@ -5,8 +5,7 @@
 FROM node:20-alpine AS deps
 
 # libc6-compat is required for Next.js to work properly on Alpine Linux
-# openssl is needed by Prisma's query engine
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
@@ -18,12 +17,9 @@ RUN npm ci --ignore-scripts
 
 # =============================================================================
 # STAGE 2: BUILDER
-# Generate Prisma client and build the Next.js app
+# Build the Next.js app
 # =============================================================================
 FROM node:20-alpine AS builder
-
-# OpenSSL is needed by Prisma during client generation
-RUN apk add --no-cache openssl
 
 WORKDIR /app
 
@@ -33,14 +29,11 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy the entire project source code
 COPY . .
 
-# Dummy DATABASE_URL so that `prisma generate` and `next build` don't fail
-# The real value is injected at runtime via environment variables
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# Supabase env vars needed at build time for Next.js to inline NEXT_PUBLIC_ values
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 
-# 1. Generate the Prisma client based on the schema
-RUN npx prisma generate
-
-# 2. Build the Next.js application
+# Build the Next.js application
 #    Requires `output: 'standalone'` in next.config.mjs for optimized output
 RUN npm run build
 
@@ -51,10 +44,6 @@ RUN npm run build
 FROM node:20-alpine AS runner
 
 WORKDIR /app
-
-# -- System dependencies --
-# OpenSSL is required by the Prisma query engine at runtime
-RUN apk add --no-cache openssl
 
 # -- Environment variables --
 ENV NODE_ENV=production

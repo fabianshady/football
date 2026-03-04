@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
 import { ClubLogo } from '@/components/club-logo'
 import { ClubTabs, type ClubStats, type DebtInfo } from '@/components/club-tabs'
 
@@ -11,10 +11,24 @@ async function getStats() {
   const now = new Date()
 
   // Partidos con goals y squad
-  const matches = await prisma.match.findMany({
-    include: { goals: { include: { player: true } }, squad: { include: { player: true } } },
-    orderBy: { date: 'desc' },
-  })
+  const { data: rawMatches, error: matchesError } = await supabase
+    .from('Match')
+    .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
+    .order('date', { ascending: false })
+
+  if (matchesError) throw matchesError
+
+  const matches = (rawMatches ?? []).map((m: any) => ({
+    ...m,
+    goals: (m.Goal ?? []).map((g: any) => ({
+      ...g,
+      player: g.Player,
+    })),
+    squad: (m.MatchSquad ?? []).map((s: any) => ({
+      ...s,
+      player: s.Player,
+    })),
+  }))
 
   // Obtener los clubes únicos (myTeam)
   const clubNames = Array.from(new Set(matches.toReversed().map((m) => m.myTeam)))
@@ -38,7 +52,7 @@ async function getStats() {
     const clubMatchIds = new Set(clubMatches.map((m) => m.id))
     const goalCountMap: Record<string, { name: string; dorsal: number; goals: number }> = {}
     clubMatches.forEach((m) => {
-      m.goals.forEach((g) => {
+      m.goals.forEach((g: any) => {
         const pid = g.playerId
         if (!goalCountMap[pid]) {
           goalCountMap[pid] = { name: g.player.name, dorsal: g.player.dorsal, goals: 0 }
@@ -53,7 +67,7 @@ async function getStats() {
     // Jugadores únicos en convocatorias de este club
     const playerSquadCount: Record<string, { name: string; count: number }> = {}
     clubMatches.forEach((m) => {
-      m.squad.forEach((s) => {
+      m.squad.forEach((s: any) => {
         const pid = s.playerId
         if (!playerSquadCount[pid]) {
           playerSquadCount[pid] = { name: s.player.name, count: 0 }
@@ -61,7 +75,7 @@ async function getStats() {
         playerSquadCount[pid].count++
       })
     })
-    const uniquePlayerIds = new Set(clubMatches.flatMap((m) => m.squad.map((s) => s.playerId)))
+    const uniquePlayerIds = new Set(clubMatches.flatMap((m) => m.squad.map((s: any) => s.playerId)))
     const totalPlayers = uniquePlayerIds.size
 
     const mostCalledEntry = Object.values(playerSquadCount).sort((a, b) => b.count - a.count)[0]
@@ -98,22 +112,30 @@ async function getStats() {
   })
 
   // Deudas (compartidas, no separadas por club)
-  const activePlayers = await prisma.player.findMany({
-    where: { active: true },
-    include: {
-      payments: { include: { event: true } },
-    },
-  })
+  const { data: rawPlayers, error: playersError } = await supabase
+    .from('Player')
+    .select('*, Payment(*, Event(*))')
+    .eq('active', true)
+
+  if (playersError) throw playersError
+
+  const activePlayers = (rawPlayers ?? []).map((p: any) => ({
+    ...p,
+    payments: (p.Payment ?? []).map((pay: any) => ({
+      ...pay,
+      event: pay.Event,
+    })),
+  }))
 
   const debts: DebtInfo[] = activePlayers
     .map((p) => {
-      const unpaid = p.payments.filter((pay) => !pay.paid)
-      const totalDebt = unpaid.reduce((acc, pay) => acc + pay.event.cost, 0)
+      const unpaid = p.payments.filter((pay: any) => !pay.paid)
+      const totalDebt = unpaid.reduce((acc: number, pay: any) => acc + pay.event.cost, 0)
       return {
         name: p.name,
         dorsal: p.dorsal,
         totalDebt,
-        events: unpaid.map((pay) => pay.event.name),
+        events: unpaid.map((pay: any) => pay.event.name),
       }
     })
     .filter((d) => d.totalDebt > 0)

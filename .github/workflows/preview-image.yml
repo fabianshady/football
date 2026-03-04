@@ -30,15 +30,11 @@ jobs:
       - name: Checar tipado estricto
         run: npx tsc --noEmit
 
-      - name: Generar Prisma
-        run: npx prisma generate
-        env:
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-
       - name: Calar el Build
         run: npm run build
         env:
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+          NEXT_PUBLIC_SUPABASE_URL: "https://dummy.supabase.co"
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: "dummy-key-for-build-check"
 
       - name: Comentar resultado del PR
         if: always()
