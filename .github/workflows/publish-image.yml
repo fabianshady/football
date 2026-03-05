@@ -40,13 +40,3 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/app_futbol_public:latest
             ghcr.io/${{ github.repository_owner }}/app_futbol_public:${{ github.sha }}
-
-  deploy:
-    runs-on: self-hosted
-    needs: docker-build-y-push
-    steps:
-      - name: Bajar la nueva imagen y reiniciar el desmadre
-        working-directory: /home/fabianshady/Projects/agenda/compose
-        run: |
-          docker compose --profile football-apps pull web_futbol_public
-          docker compose --profile football-apps up -d

@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { ClubLogo } from '@/components/club-logo'
 import { ClubTabs, type ClubStats, type DebtInfo } from '@/components/club-tabs'
 
-// Forzar renderizado dinámico - NO pre-renderizar en build
+// Force dynamic rendering for this page, since it relies on real-time data and we want to ensure it always shows the latest stats without caching.
 export const dynamic = 'force-dynamic'
 
 export const revalidate = 60
@@ -10,7 +10,7 @@ export const revalidate = 60
 async function getStats() {
   const now = new Date()
 
-  // Partidos con goals y squad
+  // Match + Goals + Players + Squads
   const { data: rawMatches, error: matchesError } = await supabase
     .from('Match')
     .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
@@ -30,10 +30,10 @@ async function getStats() {
     })),
   }))
 
-  // Obtener los clubes únicos (myTeam)
+  // Get unique club names from matches (reversed to prioritize most recent clubs)
   const clubNames = Array.from(new Set(matches.toReversed().map((m) => m.myTeam)))
 
-  // Calcular stats por club
+  // Calculate stats for each club
   const clubStats: ClubStats[] = clubNames.map((clubName) => {
     const clubMatches = matches.filter((m) => m.myTeam === clubName)
     const pastMatches = clubMatches.filter((m) => new Date(m.date) < now)
@@ -48,7 +48,7 @@ async function getStats() {
       else draws++
     })
 
-    // Goleadores de este club (solo goles en partidos de este club)
+    // Scorers (only counting goals from matches of this club)
     const clubMatchIds = new Set(clubMatches.map((m) => m.id))
     const goalCountMap: Record<string, { name: string; dorsal: number; goals: number }> = {}
     clubMatches.forEach((m) => {
@@ -64,7 +64,7 @@ async function getStats() {
       .sort((a, b) => b.goals - a.goals)
       .slice(0, 10)
 
-    // Jugadores únicos en convocatorias de este club
+    // Unique players in squads
     const playerSquadCount: Record<string, { name: string; count: number }> = {}
     clubMatches.forEach((m) => {
       m.squad.forEach((s: any) => {
@@ -81,10 +81,10 @@ async function getStats() {
     const mostCalledEntry = Object.values(playerSquadCount).sort((a, b) => b.count - a.count)[0]
     const mostCalled = mostCalledEntry ? { name: mostCalledEntry.name, count: mostCalledEntry.count } : null
 
-    // Goles por mes
+    // Monthly goals (only counting past matches)
     const monthlyData: Record<string, { scored: number; conceded: number }> = {}
     pastMatches.forEach((m) => {
-      const month = new Date(m.date).toLocaleDateString('es-MX', { month: 'short', year: '2-digit' })
+      const month = new Date(m.date).toLocaleDateString('es-MX', { month: 'short', year: '2-digit', timeZone: 'UTC' })
       if (!monthlyData[month]) monthlyData[month] = { scored: 0, conceded: 0 }
       monthlyData[month].scored += m.scoreHome
       monthlyData[month].conceded += m.scoreAway
@@ -93,6 +93,32 @@ async function getStats() {
       .map(([month, data]) => ({ month, ...data }))
       .reverse()
       .slice(-6)
+
+    // Build complete player roster with stats
+    const playerRosterMap: Record<string, any> = {}
+    clubMatches.forEach((m) => {
+      m.squad.forEach((s: any) => {
+        const pid = s.playerId
+        if (!playerRosterMap[pid]) {
+          playerRosterMap[pid] = {
+            id: s.player.id,
+            name: s.player.name,
+            dorsal: s.player.dorsal,
+            positions: s.player.positions || [],
+            callUps: 0,
+            goals: 0,
+          }
+        }
+        playerRosterMap[pid].callUps++
+      })
+      m.goals.forEach((g: any) => {
+        const pid = g.playerId
+        if (playerRosterMap[pid]) {
+          playerRosterMap[pid].goals++
+        }
+      })
+    })
+    const players = Object.values(playerRosterMap).sort((a, b) => b.callUps - a.callUps)
 
     return {
       clubName,
@@ -108,10 +134,11 @@ async function getStats() {
       totalMatches: pastMatches.length,
       monthlyGoals,
       mostCalled,
+      players,
     } satisfies ClubStats
   })
 
-  // Deudas (compartidas, no separadas por club)
+  // Debts 
   const { data: rawPlayers, error: playersError } = await supabase
     .from('Player')
     .select('*, Payment(*, Event(*))')
