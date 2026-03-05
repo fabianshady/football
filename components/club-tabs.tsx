@@ -19,6 +19,7 @@ import {
   DollarSign,
   Zap,
   Shield,
+  User,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -36,6 +37,7 @@ export interface ClubStats {
   totalMatches: number
   monthlyGoals: { month: string; scored: number; conceded: number }[]
   mostCalled: { name: string; count: number } | null
+  players: { id: string; name: string; dorsal: number; positions: string[]; callUps: number; goals: number }[]
 }
 
 export interface DebtInfo {
@@ -121,9 +123,10 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
 
       {/* Main Tabs */}
       <Tabs defaultValue="matches" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
           <TabsTrigger value="matches">Partidos</TabsTrigger>
           <TabsTrigger value="scorers">Goleadores</TabsTrigger>
+          <TabsTrigger value="players">Jugadores</TabsTrigger>
           <TabsTrigger value="stats">Estadísticas</TabsTrigger>
           <TabsTrigger value="debts">Deudas</TabsTrigger>
         </TabsList>
@@ -239,6 +242,102 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Jugadores */}
+        <TabsContent value="players" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-500" />
+                Plantilla de {currentStats.clubName}
+              </CardTitle>
+              <CardDescription>
+                {currentStats.players.length} jugador(es) activo(s)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {currentStats.players.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No hay jugadores activos
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {currentStats.players
+                    .sort((a, b) => a.dorsal - b.dorsal)
+                    .map((player) => (
+                      <div
+                        key={player.id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border hover:bg-muted/70 transition-colors"
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="font-bold text-primary text-lg">#{player.dorsal}</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-base">{player.name}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {player.positions.map((pos) => (
+                                <Badge key={pos} variant="outline" className="text-xs">
+                                  {pos}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6 text-sm">
+                          <div className="text-center">
+                            <p className="text-muted-foreground text-xs">Convocatorias</p>
+                            <p className="font-bold text-base">{player.callUps}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-muted-foreground text-xs">Goles</p>
+                            <p className="font-bold text-base text-emerald-500">{player.goals}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Estadísticas de jugadores */}
+          {currentStats.players.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <User className="h-6 w-6 mx-auto text-blue-500 mb-2" />
+                    <p className="text-3xl font-bold">{currentStats.players.length}</p>
+                    <p className="text-muted-foreground mt-1 text-sm">Jugadores Activos</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <Trophy className="h-6 w-6 mx-auto text-yellow-500 mb-2" />
+                    <p className="text-3xl font-bold">
+                      {Math.max(...currentStats.players.map((p) => p.callUps), 0)}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-sm">Máx. Convocatorias</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <Target className="h-6 w-6 mx-auto text-emerald-500 mb-2" />
+                    <p className="text-3xl font-bold">
+                      {currentStats.players.reduce((acc, p) => acc + p.goals, 0)}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-sm">Goles en Plantilla</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         {/* Estadísticas */}
