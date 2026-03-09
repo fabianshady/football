@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { ClubLogo } from '@/components/club-logo'
 import { ClubTabs, type ClubStats, type DebtInfo } from '@/components/club-tabs'
+import { formatDateTime } from '@/lib/utils'
 
 // Force dynamic rendering for this page, since it relies on real-time data and we want to ensure it always shows the latest stats without caching.
 export const dynamic = 'force-dynamic'
@@ -204,7 +205,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>Última actualización: {new Date().toLocaleString('es-MX')}</p>
+        <p>Última actualización: {formatDateTime(new Date())} </p>
       </footer>
     </main>
   )
