@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     siteName: 'ITJAGUARS FC Stats',
     images: [
       {
-        url: 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/preview.png',
+        url: 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/preview.jpg',
         width: 1200,
         height: 630,
         alt: 'ITJAGUARS FC Stats Preview',
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ITJAGUARS FC Stats',
     description: 'Estadísticas y resultados del equipo ITJAGUARS FC',
-    images: ['https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/preview.png'],
+    images: ['https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/preview.jpg'],
   },
   icons: {
     icon: 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/logo.png',
