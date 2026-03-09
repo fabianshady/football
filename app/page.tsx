@@ -13,14 +13,20 @@ async function getStats() {
   const now = new Date()
 
   // Match + Goals + Players + Squads
-  const { data: rawMatches, error: matchesError } = await supabase
-    .from('Match')
-    .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
-    .order('date', { ascending: false })
+  let rawMatches = []
+  try {
+    const { data, error } = await supabase
+      .from('Match')
+      .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
+      .order('date', { ascending: false })
 
-  if (matchesError) throw matchesError
+    if (error) throw error
+    rawMatches = data ?? []
+  } catch (err) {
+    console.warn('⚠️ No se pudieron obtener los partidos de Supabase durante el build:', err)
+  }
 
-  const matches = (rawMatches ?? []).map((m: any) => ({
+  const matches = rawMatches.map((m: any) => ({
     ...m,
     goals: (m.Goal ?? []).map((g: any) => ({
       ...g,
@@ -140,14 +146,20 @@ async function getStats() {
   })
 
   // Debts 
-  const { data: rawPlayers, error: playersError } = await supabase
-    .from('Player')
-    .select('*, Payment(*, Event(*))')
-    .eq('active', true)
+  let rawPlayers = []
+  try {
+    const { data, error } = await supabase
+      .from('Player')
+      .select('*, Payment(*, Event(*))')
+      .eq('active', true)
 
-  if (playersError) throw playersError
+    if (error) throw error
+    rawPlayers = data ?? []
+  } catch (err) {
+    console.warn('⚠️ No se pudieron obtener los jugadores de Supabase durante el build:', err)
+  }
 
-  const activePlayers = (rawPlayers ?? []).map((p: any) => ({
+  const activePlayers = rawPlayers.map((p: any) => ({
     ...p,
     payments: (p.Payment ?? []).map((pay: any) => ({
       ...pay,
