@@ -1,166 +1,103 @@
 # 🐆 ITJAGUARS FC Stats
 
-A real-time football statistics dashboard for **ITJAGUARS FC** — built with Next.js, Prisma, and PostgreSQL.
+<p align="center">
+  <img src="https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/logo.png" width="150" alt="ITJAGUARS FC Logo">
+</p>
 
-Live site: [itjaguars.fabianms.com](https://itjaguars.fabianms.com)
+<p align="center">
+  <strong>Dashboard de estadísticas premium para el equipo ITJAGUARS FC.</strong><br>
+  Construido con un stack moderno, optimizado para el rendimiento y con una interfaz visualmente impactante.
+</p>
 
----
-
-## ✨ Features
-
-- **Match tracking** — upcoming fixtures and full results history
-- **Team stats** — wins, draws, losses, goals for/against, win rate
-- **Top scorers** — ranked goal table with per-player chart
-- **Monthly trends** — goals scored vs. conceded over the last 6 months
-- **Debt tracker** — outstanding payments per player across all events
-- **Multi-club support** — switch between different clubs registered in the system
-- **Dark mode UI** — Tailwind CSS + Radix UI with a gradient dark theme
-- **Auto-refresh** — pages revalidate every 60 seconds
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | [Next.js 14](https://nextjs.org/) (App Router, standalone output) |
-| Language | TypeScript |
-| Database | PostgreSQL |
-| ORM | [Prisma](https://www.prisma.io/) |
-| Styling | [Tailwind CSS](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) |
-| Charts | [Chart.js](https://www.chartjs.org/) + [react-chartjs-2](https://react-chartjs-2.js.org/) |
-| Icons | [Lucide React](https://lucide.dev/) |
-| Container | Docker (multi-stage build) |
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Supabase-DB-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase">
+  <img src="https://img.shields.io/badge/Docker-Standalone-2496ED?style=for-the-badge&logo=docker" alt="Docker">
+  <img src="https://img.shields.io/badge/Vercel-Optimized-black?style=for-the-badge&logo=vercel" alt="Vercel">
+</p>
 
 ---
 
-## 📐 Data Model
+## ✨ Características Principales
 
-```
-Player      – name, dorsal, positions[], active
-Match       – myTeam, rivalTeam, date, location, scores
-Goal        – match, player, minute (optional)
-MatchSquad  – match ↔ player (players called up)
-Event       – name, cost, date  (training, tournament fees, etc.)
-Payment     – player ↔ event, paid flag
-```
+- 🚀 **Performance Extremo**: Optimizado con Next.js Standalone, compresión y formatos de imagen de última generación (AVIF/WebP).
+- 🎨 **Interfaz Premium**: Diseño basado en **Glassmorphism**, animaciones suaves y un sistema de diseño oscuro con gradientes dinámicos.
+- 📊 **Estadísticas en Tiempo Real**: Sincronización directa con Supabase para mostrar resultados, goleadores y récords al instante.
+- ⚽ **Gestión Multi-Club**: Soporte para visualizar estadísticas de diferentes clubes dentro de la misma plataforma.
+- 💰 **Control de Finanzas**: Rastreador de deudas y pagos pendientes por jugador y evento.
+- 🤖 **CI/CD Robusto**: Automatización completa con GitHub Actions para Linting, Type-checking, Builds de pre-despliegue y publicación en GHCR.
 
 ---
 
-## 🚀 Getting Started
+## 🛠️ Stack Tecnológico
 
-### Prerequisites
+| Componente | Tecnología |
+| :--- | :--- |
+| **Framework** | [Next.js 16 (App Router)](https://nextjs.org/) |
+| **Frontend** | [React 19](https://react.dev/), [Tailwind CSS 4](https://tailwindcss.com/) |
+| **Base de Datos** | [Supabase (PostgreSQL)](https://supabase.com/) |
+| **Gráficos** | [Chart.js](https://www.chartjs.org/) |
+| **Iconografía** | [Lucide React](https://lucide.dev/) |
+| **Monitoreo** | Vercel Analytics & Speed Insights |
+| **Infraestructura** | Docker (Standalone mode), GitHub Actions |
 
-- Node.js 20+
-- PostgreSQL database
+---
 
-### 1. Clone the repository
+## 🚀 Despliegue y CI/CD
 
+El proyecto cuenta con una infraestructura de automatización completa:
+
+1. **`CI`**: Valida cada Pull Request ejecutando Lint, Type-check y una build de prueba.
+2. **`Pre-deploy Checks`**: Asegura que la rama `main` esté siempre sana antes de que Vercel inicie el despliegue.
+3. **`Docker Hub / GHCR`**: Compila y publica automáticamente una imagen de Docker optimizada (`linux/arm64`) en cada push a `main`.
+
+### Docker Standalone
+La aplicación está configurada para ejecutarse en modo **Standalone**, lo que reduce drásticamente el tamaño de la imagen y mejora la eficiencia en producción.
+> Forzado mediante `NEXT_PRIVATE_STANDALONE=true` en el Dockerfile.
+
+---
+
+## 💻 Desarrollo Local
+
+### 1. Clonar y configurar
 ```bash
 git clone https://github.com/fabianshady/football.git
 cd football
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Configure environment
-
-Create a `.env` file at the project root:
-
+### 2. Variables de Entorno
+Crea un archivo `.env` con las credenciales de Supabase:
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=tu_anon_key
 ```
 
-### 4. Apply the database schema
-
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-### 5. Run the development server
-
+### 3. Ejecutar
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
 ---
 
-## 📦 Available Scripts
+## 🐳 Docker (Standalone)
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Generate Prisma client and build for production |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run ESLint |
-
----
-
-## 🐳 Docker Deployment
-
-The project ships with a production-ready multi-stage Dockerfile.
-
-### Build the image
+Para construir y ejecutar localmente con Docker:
 
 ```bash
+# Construir imagen
 docker build -t itjaguars-fc .
-```
 
-### Run the container
-
-```bash
+# Ejecutar contenedor
 docker run -p 3001:3001 \
-  -e DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE" \
+  -e NEXT_PUBLIC_SUPABASE_URL="tu_url" \
+  -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY="tu_key" \
   itjaguars-fc
 ```
 
-The app listens on port **3001** by default.
-
-> **Note:** The Docker image uses Alpine Linux with OpenSSL for Prisma compatibility, and runs as a non-root user (`nextjs`) for security.
-
 ---
 
-## 📁 Project Structure
+## 📄 Licencia
 
-```
-.
-├── app/                  # Next.js App Router pages and layout
-│   ├── layout.tsx        # Root layout with metadata and fonts
-│   └── page.tsx          # Home page — fetches stats and renders dashboard
-├── components/           # Reusable UI components
-│   ├── charts/           # Chart.js chart wrappers
-│   ├── club-tabs.tsx     # Main tabbed dashboard (matches, scorers, stats, debts)
-│   ├── match-card.tsx    # Single match card
-│   ├── matches-history.tsx
-│   ├── stat-card.tsx
-│   └── ui/               # Shadcn-style primitive components
-├── lib/
-│   ├── prisma.ts         # Prisma client singleton
-│   └── utils.ts          # Shared utility functions
-├── prisma/
-│   └── schema.prisma     # Database schema
-├── public/               # Static assets (logo, preview image, etc.)
-├── Dockerfile
-└── next.config.js
-```
-
----
-
-## 🌐 Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-
----
-
-## 📄 License
-
-This project is private and maintained by [fabianshady](https://github.com/fabianshady).
+Este proyecto es privado y mantenido por **[fabianshady](https://github.com/fabianshady)**. Todos los derechos reservados.
