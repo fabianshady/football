@@ -1,0 +1,51 @@
+# =============================================================================
+# Pre-deploy Checks (Vercel)
+# Runs when code lands on main (push). Validates the build is healthy
+# before Vercel's own deployment picks it up. Add this workflow's URL
+# as a "Required Check" in Vercel → Settings → Git → Checks.
+# =============================================================================
+name: Pre-deploy Checks
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.dockerignore'
+
+concurrency:
+  group: predeploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  predeploy:
+    name: Validate Before Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: 'placeholder-key-for-predeploy'

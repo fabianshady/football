@@ -1,15 +1,13 @@
-# .dockerignore
 .git
+.github
 .gitignore
 .env
-__pycache__
-*.pyc
-*.pyo
-venv/
-node_modules/
+.env.*
+.next
+node_modules
 npm-debug.log
+*.log
 Dockerfile
 docker-compose.yml
 README.md
-.next
-*.log
+.dockerignore

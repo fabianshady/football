@@ -1,0 +1,70 @@
+# =============================================================================
+# CI — Pull Request Health Checks
+# Runs on every PR targeting main. Validates code quality, type safety, and
+# build correctness before merge.
+# =============================================================================
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.dockerignore'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint · Typecheck · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: 'placeholder-key-for-ci-build'
+
+      - name: Comment PR result
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          JOB_STATUS: ${{ job.status }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const status = process.env.JOB_STATUS;
+            const ok = status === 'success';
+            const body = ok
+              ? '✅ **CI passed** — Lint, type-check y build están correctos. Este PR está listo para merge.'
+              : `❌ **CI failed** — Algunas verificaciones fallaron (estado: \`${status}\`). Revisa los logs de GitHub Actions.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });

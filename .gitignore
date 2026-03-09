@@ -2,3 +2,21 @@ node_modules
 .next
 .env
 .env.local
+.env.*.local
+
+# Build output
+out/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# Debug
+npm-debug.log*
+
+# Vercel
+.vercel
+
+# TypeScript incremental build
+tsconfig.tsbuildinfo

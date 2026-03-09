@@ -1,13 +1,14 @@
 import { supabase } from '@/lib/supabase'
 import { ClubLogo } from '@/components/club-logo'
 import { ClubTabs, type ClubStats, type DebtInfo } from '@/components/club-tabs'
-import { formatDateTime } from '@/lib/utils'
+
 
 // Force dynamic rendering for this page, since it relies on real-time data and we want to ensure it always shows the latest stats without caching.
 export const dynamic = 'force-dynamic'
 
 export const revalidate = 60
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase responses are untyped without generated DB types */
 async function getStats() {
   const now = new Date()
 
@@ -50,7 +51,6 @@ async function getStats() {
     })
 
     // Scorers (only counting goals from matches of this club)
-    const clubMatchIds = new Set(clubMatches.map((m) => m.id))
     const goalCountMap: Record<string, { name: string; dorsal: number; goals: number }> = {}
     clubMatches.forEach((m) => {
       m.goals.forEach((g: any) => {
@@ -183,17 +183,26 @@ export default async function HomePage() {
   const { clubStats, debts, totalTeamDebt, totalPlayers } = await getStats()
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-7xl">
+    <main className="container mx-auto px-4 py-8 max-w-7xl animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col gap-2 mb-8">
-        <div className="flex items-center gap-4">
-          <ClubLogo size="lg" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">ITJAGUARS FC</h1>
-            <p className="text-muted-foreground">Dashboard de estadísticas del equipo</p>
+      <header className="relative mb-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div className="relative">
+            <div className="absolute -inset-2 rounded-full bg-primary/10 blur-xl animate-pulse-soft" />
+            <ClubLogo size="lg" className="relative glow-primary" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight gradient-text">
+              ITJAGUARS FC
+            </h1>
+            <p className="text-muted-foreground text-base sm:text-lg">
+              Dashboard de estadísticas del equipo
+            </p>
           </div>
         </div>
-      </div>
+        {/* Decorative accent line */}
+        <div className="mt-6 h-px bg-gradient-to-r from-primary/50 via-primary/20 to-transparent" />
+      </header>
 
       {/* Club-separated content */}
       <ClubTabs
@@ -204,8 +213,15 @@ export default async function HomePage() {
       />
 
       {/* Footer */}
-      <footer className="mt-12 text-center text-sm text-muted-foreground">
-        <p>Última actualización: {formatDateTime(new Date())} </p>
+      <footer className="mt-16 pb-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} ITJAGUARS FC</p>
+          <p className="flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />
+            Datos en tiempo real
+          </p>
+        </div>
       </footer>
     </main>
   )

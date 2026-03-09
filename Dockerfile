@@ -1,6 +1,6 @@
 # =============================================================================
 # STAGE 1: DEPENDENCIES
-# Install all Node.js dependencies (including devDependencies for TS compilation)
+# Install all Node.js dependencies (including devDependencies for TS build)
 # =============================================================================
 FROM node:20-alpine AS deps
 
@@ -12,12 +12,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install all dependencies (dev included, needed for build stage)
-# --ignore-scripts prevents postinstall hooks from running prematurely
-RUN npm ci --ignore-scripts
+RUN npm ci
 
 # =============================================================================
 # STAGE 2: BUILDER
-# Build the Next.js app
+# Build the Next.js app with standalone output
 # =============================================================================
 FROM node:20-alpine AS builder
 
@@ -33,38 +32,49 @@ COPY . .
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 
-# Build the Next.js application
-#    Requires `output: 'standalone'` in next.config.mjs for optimized output
+# Disable telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# ────────────────────────────────────────────────
+# Fuerza modo standalone sin tocar next.config.js
+ENV NEXT_PRIVATE_STANDALONE=true
+# ────────────────────────────────────────────────
+
+# Build the Next.js application (requires `output: 'standalone'` in next.config.ts)
 RUN npm run build
 
 # =============================================================================
 # STAGE 3: RUNNER (PRODUCTION)
-# Minimal image with only the files needed to run the application
+# Minimal image with only the files needed to run the standalone server
 # =============================================================================
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# -- Environment variables --
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3001
 
-# -- Security: create a non-root user --
+# Security: create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# -- Copy public/static assets --
+# Copy public/static assets
 COPY --from=builder /app/public ./public
 
-# -- Copy the Next.js standalone build --
+# Set correct permissions for prerender cache
+RUN mkdir .next && chown nextjs:nodejs .next
+
+# Copy the Next.js standalone build
 # The standalone folder contains a self-sufficient server.js and minimal node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# -- Switch to non-root user --
+# Switch to non-root user
 USER nextjs
 
-# -- Start the application --
+EXPOSE 3001
+
+# Start the standalone server
 CMD ["node", "server.js"]
