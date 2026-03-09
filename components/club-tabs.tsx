@@ -133,7 +133,7 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
           </TabsTrigger>
           <TabsTrigger value="scorers" className="gap-1.5">
             <Target className="h-4 w-4 hidden sm:block" />
-            Goleadores
+            Goles
           </TabsTrigger>
           <TabsTrigger value="players" className="gap-1.5">
             <Users className="h-4 w-4 hidden sm:block" />
@@ -141,7 +141,7 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
           </TabsTrigger>
           <TabsTrigger value="stats" className="gap-1.5">
             <TrendingUp className="h-4 w-4 hidden sm:block" />
-            Estadísticas
+            Stats
           </TabsTrigger>
           <TabsTrigger value="debts" className="gap-1.5">
             <DollarSign className="h-4 w-4 hidden sm:block" />
