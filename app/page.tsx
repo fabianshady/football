@@ -3,27 +3,37 @@ import { ClubLogo } from '@/components/club-logo'
 import { ClubTabs, type ClubStats, type DebtInfo } from '@/components/club-tabs'
 
 
-// Force dynamic rendering for this page, since it relies on real-time data and we want to ensure it always shows the latest stats without caching.
-export const dynamic = 'force-dynamic'
-
+// Usamos ISR (Incremental Static Regeneration) 
+// La página mostrará HTML ultrarrápido por 60 segundos antes de recargarse.
 export const revalidate = 60
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- Supabase responses are untyped without generated DB types */
 async function getStats() {
   const now = new Date()
 
-  // Match + Goals + Players + Squads
+  // Peticiones paralelas de Partidos y Jugadores para reducir latencia
   let rawMatches = []
-  try {
-    const { data, error } = await supabase
-      .from('Match')
-      .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
-      .order('date', { ascending: false })
+  let rawPlayers = []
 
-    if (error) throw error
-    rawMatches = data ?? []
+  try {
+    const [matchesRes, playersRes] = await Promise.all([
+      supabase
+        .from('Match')
+        .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
+        .order('date', { ascending: false }),
+      supabase
+        .from('Player')
+        .select('*, Payment(*, Event(*))')
+        .eq('active', true),
+    ])
+
+    if (matchesRes.error) console.warn('⚠️ Fallo al obtener partidos:', matchesRes.error.message)
+    else rawMatches = matchesRes.data ?? []
+
+    if (playersRes.error) console.warn('⚠️ Fallo al obtener jugadores:', playersRes.error.message)
+    else rawPlayers = playersRes.data ?? []
   } catch (err) {
-    console.warn('⚠️ No se pudieron obtener los partidos de Supabase durante el build:', err)
+    console.warn('⚠️ Error durante el fetch a Supabase en build:', err)
   }
 
   const matches = rawMatches.map((m: any) => ({
@@ -145,19 +155,8 @@ async function getStats() {
     } satisfies ClubStats
   })
 
-  // Debts 
-  let rawPlayers = []
-  try {
-    const { data, error } = await supabase
-      .from('Player')
-      .select('*, Payment(*, Event(*))')
-      .eq('active', true)
-
-    if (error) throw error
-    rawPlayers = data ?? []
-  } catch (err) {
-    console.warn('⚠️ No se pudieron obtener los jugadores de Supabase durante el build:', err)
-  }
+  // Debts
+  // La información de 'rawPlayers' ya se consultó al inicio paralelamente.
 
   const activePlayers = rawPlayers.map((p: any) => ({
     ...p,
