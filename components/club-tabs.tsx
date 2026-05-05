@@ -584,12 +584,12 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
         <TabsContent value="rivals" className="space-y-6 animate-fade-in">
           {(() => {
             const allMatches = [...currentStats.pastMatches, ...currentStats.futureMatches]
-            const opponentMap: Record<string, { count: number; matches: { date: string; scoreHome: number; scoreAway: number; isPast: boolean }[] }> = {}
+            const opponentMap: Record<string, { displayName: string; count: number; matches: { date: string; scoreHome: number; scoreAway: number; isPast: boolean }[] }> = {}
             allMatches.forEach((m) => {
-              const rival = m.rivalTeam
-              if (!opponentMap[rival]) opponentMap[rival] = { count: 0, matches: [] }
-              opponentMap[rival].count++
-              opponentMap[rival].matches.push({
+              const key = (m.rivalTeam as string).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+              if (!opponentMap[key]) opponentMap[key] = { displayName: m.rivalTeam, count: 0, matches: [] }
+              opponentMap[key].count++
+              opponentMap[key].matches.push({
                 date: m.date,
                 scoreHome: m.scoreHome,
                 scoreAway: m.scoreAway,
@@ -618,10 +618,10 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
                       <p className="text-muted-foreground text-sm text-center py-6">Sin partidos registrados</p>
                     ) : (
                       <div className="space-y-2">
-                        {opponents.map(([rival, data]) => (
-                          <div key={rival} className="p-3 rounded-xl bg-muted/40 border border-border/30 hover:bg-muted/60 transition-all duration-200">
+                        {opponents.map(([key, data]) => (
+                          <div key={key} className="p-3 rounded-xl bg-muted/40 border border-border/30 hover:bg-muted/60 transition-all duration-200">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium">{rival}</span>
+                              <span className="font-medium">{data.displayName}</span>
                               {data.count > 1 ? (
                                 <Badge variant="destructive" className="text-xs">{data.count}x repetido</Badge>
                               ) : (
@@ -665,9 +665,9 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
                       <p className="text-muted-foreground text-sm text-center py-6">Todos los rivales son nuevos</p>
                     ) : (
                       <div className="space-y-3">
-                        {repeated.map(([rival, data]) => (
-                          <div key={rival} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/20">
-                            <span className="font-medium">{rival}</span>
+                        {repeated.map(([key, data]) => (
+                          <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+                            <span className="font-medium">{data.displayName}</span>
                             <Badge variant="destructive">{data.count} veces</Badge>
                           </div>
                         ))}
