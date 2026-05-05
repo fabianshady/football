@@ -131,7 +131,7 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
 
       {/* Main Tabs */}
       <Tabs defaultValue="matches" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:w-[650px] h-12">
+        <TabsList className="grid w-full grid-cols-6 lg:w-[780px] h-12">
           <TabsTrigger value="matches" className="gap-1.5">
             <Calendar className="h-4 w-4 hidden sm:block" />
             Partidos
@@ -151,6 +151,10 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
           <TabsTrigger value="debts" className="gap-1.5">
             <DollarSign className="h-4 w-4 hidden sm:block" />
             Deudas
+          </TabsTrigger>
+          <TabsTrigger value="rivals" className="gap-1.5">
+            <Shield className="h-4 w-4 hidden sm:block" />
+            Rivales
           </TabsTrigger>
         </TabsList>
 
@@ -574,6 +578,106 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Rivales */}
+        <TabsContent value="rivals" className="space-y-6 animate-fade-in">
+          {(() => {
+            const allMatches = [...currentStats.pastMatches, ...currentStats.futureMatches]
+            const opponentMap: Record<string, { count: number; matches: { date: string; scoreHome: number; scoreAway: number; isPast: boolean }[] }> = {}
+            allMatches.forEach((m) => {
+              const rival = m.rivalTeam
+              if (!opponentMap[rival]) opponentMap[rival] = { count: 0, matches: [] }
+              opponentMap[rival].count++
+              opponentMap[rival].matches.push({
+                date: m.date,
+                scoreHome: m.scoreHome,
+                scoreAway: m.scoreAway,
+                isPast: new Date(m.date) < new Date(),
+              })
+            })
+            const opponents = Object.entries(opponentMap).sort((a, b) => b[1].count - a[1].count)
+            const repeated = opponents.filter(([, v]) => v.count > 1)
+
+            return (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-violet-500/10">
+                        <Shield className="h-5 w-5 text-violet-500" />
+                      </div>
+                      Rivales Enfrentados
+                    </CardTitle>
+                    <CardDescription>
+                      {opponents.length} rival(es) distintos · {allMatches.length} partido(s) total
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {opponents.length === 0 ? (
+                      <p className="text-muted-foreground text-sm text-center py-6">Sin partidos registrados</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {opponents.map(([rival, data]) => (
+                          <div key={rival} className="p-3 rounded-xl bg-muted/40 border border-border/30 hover:bg-muted/60 transition-all duration-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium">{rival}</span>
+                              {data.count > 1 ? (
+                                <Badge variant="destructive" className="text-xs">{data.count}x repetido</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-xs">1 vez</Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {data.matches
+                                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                .map((m, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-xs text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md"
+                                  >
+                                    {new Date(m.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit', timeZone: 'UTC' })}
+                                    {m.isPast && ` · ${m.scoreHome}–${m.scoreAway}`}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-red-500/10">
+                        <Target className="h-5 w-5 text-red-500" />
+                      </div>
+                      Rivales Repetidos
+                    </CardTitle>
+                    <CardDescription>
+                      {repeated.length === 0 ? 'Sin repeticiones aún' : `${repeated.length} rival(es) ya enfrentados más de una vez`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {repeated.length === 0 ? (
+                      <p className="text-muted-foreground text-sm text-center py-6">Todos los rivales son nuevos</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {repeated.map(([rival, data]) => (
+                          <div key={rival} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+                            <span className="font-medium">{rival}</span>
+                            <Badge variant="destructive">{data.count} veces</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          })()}
         </TabsContent>
       </Tabs>
     </div>
