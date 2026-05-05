@@ -174,7 +174,7 @@ async function getStats() {
         name: p.name,
         dorsal: p.dorsal,
         totalDebt,
-        events: unpaid.map((pay: any) => pay.event.name),
+        events: unpaid.map((pay: any) => ({ name: pay.event.name, date: pay.event.date ?? null })),
       }
     })
     .filter((d) => d.totalDebt > 0)

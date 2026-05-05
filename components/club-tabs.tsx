@@ -42,11 +42,16 @@ export interface ClubStats {
   players: { id: string; name: string; dorsal: number; positions: string[]; callUps: number; goals: number }[]
 }
 
+export interface DebtEvent {
+  name: string
+  date: string | null
+}
+
 export interface DebtInfo {
   name: string
   dorsal: number
   totalDebt: number
-  events: string[]
+  events: DebtEvent[]
 }
 
 interface ClubTabsProps {
@@ -509,8 +514,13 @@ export function ClubTabs({ clubStats, debts, totalTeamDebt, totalPlayers }: Club
                             <p className="font-medium">{debt.name}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {debt.events.map((event) => (
-                                <Badge key={event} variant="outline" className="text-xs">
-                                  {event}
+                                <Badge key={event.name} variant="outline" className="text-xs">
+                                  {event.name}
+                                  {event.date && (
+                                    <span className="ml-1 text-muted-foreground">
+                                      {new Date(event.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', timeZone: 'UTC' })}
+                                    </span>
+                                  )}
                                 </Badge>
                               ))}
                             </div>

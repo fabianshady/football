@@ -20,3 +20,6 @@ npm-debug.log*
 
 # TypeScript incremental build
 tsconfig.tsbuildinfo
+
+# Claude
+CLAUDE.md
