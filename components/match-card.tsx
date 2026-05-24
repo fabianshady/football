@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDateTime } from '@/lib/utils'
 import { CalendarDays, MapPin, Users } from 'lucide-react'
+import Image from 'next/image'
 
 interface Player {
   id: string
@@ -22,6 +23,7 @@ interface MatchCardProps {
     scoreHome: number
     scoreAway: number
     squad?: { player: Player }[]
+    kit?: number
   }
   isPast: boolean
 }
@@ -52,17 +54,47 @@ export function MatchCard({ match, isPast }: MatchCardProps) {
             <CalendarDays className="h-4 w-4" />
             <span>{formatDateTime(match.date)}</span>
           </div>
-          {isPast && result && (
-            <Badge variant={result === 'win' ? 'success' : result === 'loss' ? 'destructive' : 'warning'}>
-              {result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : 'Empate'}
-            </Badge>
-          )}
-          {!isPast && <Badge variant="secondary">Próximo</Badge>}
+          <div className="flex items-center gap-2">
+            {match.kit && (match.kit === 1 || match.kit === 2) && (
+              <div className="flex items-center gap-1.5 bg-muted/65 px-2 py-0.5 rounded-lg border border-border/40 text-xs text-muted-foreground font-medium select-none shadow-sm hover:bg-muted/80 transition-colors">
+                <Image
+                  src={match.kit === 1 ? 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/1u.png' : 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/2u.png'}
+                  alt={`Uniforme ${match.kit}`}
+                  width={16}
+                  height={16}
+                  className="object-contain"
+                />
+                <span className="text-[11px]">U{match.kit}</span>
+              </div>
+            )}
+            {isPast && result && (
+              <Badge variant={result === 'win' ? 'success' : result === 'loss' ? 'destructive' : 'warning'}>
+                {result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : 'Empate'}
+              </Badge>
+            )}
+            {!isPast && <Badge variant="secondary">Próximo</Badge>}
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 text-center">
-            <p className="font-bold text-lg">{match.myTeam}</p>
+            <div className="flex items-center justify-center gap-2">
+              <p className="font-bold text-lg">{match.myTeam}</p>
+              {match.kit && (match.kit === 1 || match.kit === 2) && (
+                <div className="relative group/kit cursor-help flex items-center justify-center">
+                  <Image
+                    src={match.kit === 1 ? 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/1u.png' : 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/2u.png'}
+                    alt={`Uniforme ${match.kit}`}
+                    width={24}
+                    height={24}
+                    className="object-contain hover:scale-125 transition-transform duration-200 filter drop-shadow-md"
+                  />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/kit:block bg-popover border border-border text-popover-foreground text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap z-20 font-medium">
+                    Uniforme {match.kit === 1 ? 'Local' : 'Visitante'}
+                  </div>
+                </div>
+              )}
+            </div>
             <Badge variant="outline" className="mt-1">#{match.myPos}°</Badge>
           </div>
 

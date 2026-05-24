@@ -23,6 +23,7 @@ interface Match {
   scoreHome: number
   scoreAway: number
   squad?: { player: Player }[]
+  kit?: number
 }
 
 interface MatchesHistoryProps {
