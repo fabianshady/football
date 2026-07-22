@@ -23,8 +23,111 @@ import {
   CalendarRange,
   ScrollText,
   Briefcase,
+  Bell,
+  ClipboardList,
+  Landmark,
+  Phone,
+  Copy,
+  Check,
+  Info,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+
+/** Payment / transfer details for team fees */
+const PAYMENT_DETAILS = {
+  phone: '5517275953',
+  clabe: '638180000142128116',
+  bbva: '1566875932',
+  bank: 'BBVA',
+  weeklyFee: 120,
+} as const
+
+function CopyableField({
+  label,
+  value,
+  displayValue,
+}: {
+  label: string
+  value: string
+  displayValue?: string
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(value.replace(/\s/g, ''))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // Fallback: select is not available; ignore
+    }
+  }, [value])
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="w-full flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/40 border border-border/30 hover:bg-muted/60 hover:border-border/50 transition-all text-left group"
+      title="Tocar para copiar"
+    >
+      <div className="min-w-0">
+        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</p>
+        <p className="font-semibold tabular-nums tracking-wide truncate">
+          {displayValue ?? value}
+        </p>
+      </div>
+      <span className="shrink-0 p-1.5 rounded-lg bg-background/60 text-muted-foreground group-hover:text-primary transition-colors">
+        {copied ? (
+          <Check className="h-4 w-4 text-emerald-500" />
+        ) : (
+          <Copy className="h-4 w-4" />
+        )}
+      </span>
+    </button>
+  )
+}
+
+function PaymentAccountCard({ compact = false }: { compact?: boolean }) {
+  return (
+    <Card className="glass-card">
+      <CardHeader className={compact ? 'pb-3' : undefined}>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <div className="p-1.5 rounded-lg bg-emerald-500/10">
+            <Landmark className="h-4 w-4 text-emerald-500" />
+          </div>
+          Datos para transferir
+        </CardTitle>
+        {!compact && (
+          <CardDescription>
+            Arbitraje semanal · {formatCurrency(PAYMENT_DETAILS.weeklyFee)} por jugador
+          </CardDescription>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-2.5">
+        {compact && (
+          <p className="text-xs text-muted-foreground mb-1">
+            Cuota semanal: <span className="font-semibold text-foreground">{formatCurrency(PAYMENT_DETAILS.weeklyFee)}</span>
+          </p>
+        )}
+        <CopyableField
+          label="Teléfono (SPEI / transfer)"
+          value={PAYMENT_DETAILS.phone}
+          displayValue={PAYMENT_DETAILS.phone}
+        />
+        <CopyableField label="CLABE" value={PAYMENT_DETAILS.clabe} />
+        <CopyableField
+          label={`Cuenta ${PAYMENT_DETAILS.bank}`}
+          value={PAYMENT_DETAILS.bbva}
+          displayValue={PAYMENT_DETAILS.bbva}
+        />
+        <p className="text-[11px] text-muted-foreground pt-1 flex items-start gap-1.5">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          Toca cualquier dato para copiarlo al portapapeles.
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
 
 export interface SeasonInfo {
   id: string
@@ -834,7 +937,7 @@ export function ClubTabs({
             )}
           </TabsContent>
 
-          {/* Deudas — not season-specific */}
+          {/* Deudas — not season-specific; best place for payment account details */}
           <TabsContent value="debts" className="space-y-6 animate-fade-in">
             <div className="grid gap-6 lg:grid-cols-3">
               <Card className="lg:col-span-2 glass-card">
@@ -846,7 +949,7 @@ export function ClubTabs({
                     Tabla de Deudas
                   </CardTitle>
                   <CardDescription>
-                    Jugadores con pagos pendientes (todos los clubes)
+                    Jugadores con pagos pendientes · usa los datos de transferencia a la derecha
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -903,45 +1006,49 @@ export function ClubTabs({
                 </CardContent>
               </Card>
 
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle>Resumen</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="text-center p-5 rounded-xl bg-red-500/10 border border-red-500/15">
-                    <p className="text-sm text-muted-foreground">Deuda Total del Equipo</p>
-                    <p className="text-3xl font-bold text-red-500 mt-1 tabular-nums">
-                      {formatCurrency(totalTeamDebt)}
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Jugadores con deuda</span>
-                      <span className="font-semibold tabular-nums">{debts.length}</span>
+              <div className="space-y-4">
+                <PaymentAccountCard compact />
+
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle>Resumen</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="text-center p-5 rounded-xl bg-red-500/10 border border-red-500/15">
+                      <p className="text-sm text-muted-foreground">Deuda Total del Equipo</p>
+                      <p className="text-3xl font-bold text-red-500 mt-1 tabular-nums">
+                        {formatCurrency(totalTeamDebt)}
+                      </p>
                     </div>
-                    <div className="h-px bg-border/50" />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Jugadores al corriente</span>
-                      <span className="font-semibold text-emerald-500 tabular-nums">
-                        {totalPlayers - debts.length}
-                      </span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Jugadores con deuda</span>
+                        <span className="font-semibold tabular-nums">{debts.length}</span>
+                      </div>
+                      <div className="h-px bg-border/50" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Jugadores al corriente</span>
+                        <span className="font-semibold text-emerald-500 tabular-nums">
+                          {totalPlayers - debts.length}
+                        </span>
+                      </div>
+                      <div className="h-px bg-border/50" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Deuda promedio</span>
+                        <span className="font-semibold tabular-nums">
+                          {debts.length > 0
+                            ? formatCurrency(totalTeamDebt / debts.length)
+                            : formatCurrency(0)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="h-px bg-border/50" />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Deuda promedio</span>
-                      <span className="font-semibold tabular-nums">
-                        {debts.length > 0
-                          ? formatCurrency(totalTeamDebt / debts.length)
-                          : formatCurrency(0)}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
-          {/* Team Policies — placeholder for future content */}
+          {/* Team Policies */}
           <TabsContent value="policies" className="space-y-6 animate-fade-in">
             <Card className="glass-card">
               <CardHeader>
@@ -952,16 +1059,149 @@ export function ClubTabs({
                   Políticas del Equipo
                 </CardTitle>
                 <CardDescription>
-                  Normas, acuerdos y lineamientos del club
+                  Acuerdos internos · cómo usamos la página y cómo nos organizamos
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-14">
-                  <ScrollText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  <p className="text-muted-foreground font-medium">Próximamente</p>
-                  <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    Aquí se publicarán las políticas y acuerdos del equipo.
+            </Card>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Dashboard / clubs */}
+              <Card className="glass-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <div className="p-1.5 rounded-lg bg-primary/10">
+                      <Shield className="h-4 w-4 text-primary" />
+                    </div>
+                    Equipos y esta página
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    En esta página está toda la info del equipo: partidos, stats, pagos y más.
                   </p>
+                  <p>
+                    Usa el selector de <span className="text-foreground font-medium">Club</span> para
+                    cambiar entre equipos:
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <Badge className="shrink-0 mt-0.5">ITJAGUARS</Badge>
+                      <span>
+                        Juegan los <span className="text-foreground font-medium">martes</span>
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Badge variant="secondary" className="shrink-0 mt-0.5">
+                        ITJ FC
+                      </Badge>
+                      <span>
+                        Juegan los <span className="text-foreground font-medium">miércoles</span>
+                      </span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              {/* Matches */}
+              <Card className="glass-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <div className="p-1.5 rounded-lg bg-blue-500/10">
+                      <ClipboardList className="h-4 w-4 text-blue-500" />
+                    </div>
+                    Partidos y resultados
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Los partidos y resultados se suben a más tardar los{' '}
+                    <span className="text-foreground font-medium">domingos</span>.
+                  </p>
+                  <p>
+                    Revisa la pestaña de Partidos (arriba) para ver próximos juegos e historial
+                    filtrados por temporada y club.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Payments policy */}
+              <Card className="glass-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <div className="p-1.5 rounded-lg bg-amber-500/10">
+                      <DollarSign className="h-4 w-4 text-amber-500" />
+                    </div>
+                    Pagos y arbitraje
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Cada semana se pagan{' '}
+                    <span className="text-foreground font-semibold">
+                      {formatCurrency(PAYMENT_DETAILS.weeklyFee)}
+                    </span>{' '}
+                    de arbitraje <span className="text-foreground font-medium">por jugador</span>.
+                  </p>
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-foreground">
+                    <p className="font-medium text-sm">Política interna</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Se paga aunque hayas faltado al partido. Así no hay que reajustar el cobro de
+                      todos cada semana.
+                    </p>
+                  </div>
+                  <p>
+                    Los saldos pendientes se ven en la pestaña{' '}
+                    <span className="text-foreground font-medium">Deudas</span>, junto con los datos
+                    para transferir.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Absences */}
+              <Card className="glass-card">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <div className="p-1.5 rounded-lg bg-violet-500/10">
+                      <Bell className="h-4 w-4 text-violet-500" />
+                    </div>
+                    Faltas y avisos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+                  <p>
+                    Si vas a faltar,{' '}
+                    <span className="text-foreground font-medium">avisa con tiempo</span> para poder
+                    prepararnos y convocar a otro jugador.
+                  </p>
+                  <p>
+                    Avisar tarde complica armar la alineación y afecta a todo el equipo.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick ref: phone icon note linking to Debts */}
+            <Card className="glass-card border-emerald-500/20 bg-emerald-500/5">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0 self-start">
+                    <Phone className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium">¿Dónde pago?</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Teléfono, CLABE y cuenta BBVA están en la pestaña{' '}
+                      <span className="text-foreground font-medium">Deudas</span> (datos para
+                      transferir). Toca cada campo para copiarlo.
+                    </p>
+                  </div>
+                  <div className="text-sm tabular-nums text-muted-foreground sm:text-right shrink-0">
+                    <p className="text-foreground font-semibold">
+                      {formatCurrency(PAYMENT_DETAILS.weeklyFee)}
+                      <span className="font-normal text-muted-foreground"> / semana</span>
+                    </p>
+                    <p className="text-xs mt-0.5">aunque faltes</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
