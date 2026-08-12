@@ -24,8 +24,8 @@ export function GoalsChart({ data }: GoalsChartProps) {
       {
         label: 'Goles',
         data: data.map((p) => p.goals),
-        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(224, 179, 58, 0.85)',
+        borderColor: 'rgba(196, 149, 32, 1)',
         borderWidth: 2,
         borderRadius: 8,
       },

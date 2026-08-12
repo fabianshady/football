@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'lucide-react',
       'date-fns',
+      'date-fns-tz',
       'chart.js',
       'react-chartjs-2',
     ],

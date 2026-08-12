@@ -23,3 +23,5 @@ tsconfig.tsbuildinfo
 
 # Claude
 CLAUDE.md
+
+.agents/

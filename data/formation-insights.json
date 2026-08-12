@@ -1,0 +1,84 @@
+{
+  "2-3-1": {
+    "strong": {
+      "title": "2-3-1 contra un rival fuerte",
+      "pros": [
+        "Los tres mediocampistas ayudan a no perder el balón contra un equipo que presiona.",
+        "Hay un carril extra para salir jugando si el punta queda tapado.",
+        "No te cierras tanto como un 3-2-1: puedes lastimar si robas a media cancha."
+      ],
+      "cons": [
+        "Solo dos defensas es poco si el rival mete gente al área.",
+        "El delantero se queda solo si los interiores no llegan a tiempo.",
+        "Un error atrás se paga caro: no hay un tercer central de cobertura."
+      ]
+    },
+    "mid": {
+      "title": "2-3-1 contra un rival intermedio",
+      "pros": [
+        "Es la formación más equilibrada: controlas el medio sin renunciar a profundidad.",
+        "Los interiores pueden abrir la cancha y forzar al rival a correr de lado a lado.",
+        "Si ganas el medio, el partido se juega en campo contrario."
+      ],
+      "cons": [
+        "Si los tres de en medio se suben juntos, quedas 2 vs 2 atrás.",
+        "Pide que el medio centro sepa cuándo quedarse y cuándo soltar.",
+        "Contra un equipo que contraataca bien, el espacio a la espalda de la zaga es grande."
+      ]
+    },
+    "weak": {
+      "title": "2-3-1 contra un rival débil",
+      "pros": [
+        "Superioridad en el medio para manejar el ritmo y no dejarlos respirar.",
+        "El punta recibe más centros y pases filtrados si los interiores llegan.",
+        "Puedes sostener la posesión y evitar un partido abierto que no te conviene."
+      ],
+      "cons": [
+        "Un solo delantero puede no bastar si se cierran con mucha gente.",
+        "Si no hay segundo punta o llegada de medios, el partido se empantana.",
+        "Dos atrás siguen siendo un riesgo si pierdes el balón en campo contrario."
+      ]
+    }
+  },
+  "3-2-1": {
+    "strong": {
+      "title": "3-2-1 contra un rival fuerte",
+      "pros": [
+        "Tres defensas acortan espacios y obligan al rival a elaborar más.",
+        "Bloque más corto: menos transiciones largas a tu portería.",
+        "Sirve para no regalar el partido si ellos tienen más individualidades."
+      ],
+      "cons": [
+        "Dos mediocampistas se pueden ver superados si el rival satura el medio.",
+        "El delantero queda muy aislado: cuesta sostener el balón arriba.",
+        "Sales menos y dependes de un contraataque limpio al primer toque."
+      ]
+    },
+    "mid": {
+      "title": "3-2-1 contra un rival intermedio",
+      "pros": [
+        "Base sólida para esperar y salir rápido por los costados de la zaga.",
+        "El doble pivote puede tapar el centro y forzar al rival a las bandas.",
+        "Si proteges un resultado, el tercer defensa da paz."
+      ],
+      "cons": [
+        "Menos control del balón: el partido se vuelve de ida y vuelta.",
+        "La amplitud depende de que un defensa o un medio se abra; si no, juegas estrecho.",
+        "Cuesta imponer ritmo si ellos también se plantan."
+      ]
+    },
+    "weak": {
+      "title": "3-2-1 contra un rival débil",
+      "pros": [
+        "Muy seguro si ya vas arriba y quieres cerrar espacios.",
+        "Ganas segundos balones cerca de tu área con gente de más atrás.",
+        "Un error individual tiene más cobertura que en el 2-3-1."
+      ],
+      "cons": [
+        "Demasiado pasivo contra un rival al que deberías ir a buscar.",
+        "Con un punta y dos medios cuesta romper un bloque bajo.",
+        "Les invitas a adelantar líneas y el partido se juega donde ellos quieren."
+      ]
+    }
+  }
+}

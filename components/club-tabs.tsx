@@ -9,7 +9,10 @@ import { GoalsChart } from '@/components/charts/goals-chart'
 import { ResultsChart } from '@/components/charts/results-chart'
 import { MonthlyGoalsChart } from '@/components/charts/monthly-goals-chart'
 import { MatchesHistory } from '@/components/matches-history'
+import { MatchdayHero } from '@/components/matchday-hero'
+import { parseMatchDate } from '@/lib/datetime'
 import { formatCurrency } from '@/lib/utils'
+import type { Match } from '@/lib/types'
 import {
   Trophy,
   Target,
@@ -149,10 +152,8 @@ export interface PlayerRosterEntry {
 export interface ClubStats {
   clubName: string
   seasonId: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase data
-  pastMatches: any[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase data
-  futureMatches: any[]
+  pastMatches: Match[]
+  futureMatches: Match[]
   wins: number
   draws: number
   losses: number
@@ -283,7 +284,7 @@ export function ClubTabs({
                     onClick={() => setSelectedClub(clubName)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                       activeClub === clubName
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                        ? 'bg-navy text-primary-foreground shadow-lg shadow-navy/30 dark:bg-gold dark:text-navy'
                         : 'bg-muted/60 text-muted-foreground hover:bg-muted border border-border/50'
                     }`}
                   >
@@ -304,8 +305,8 @@ export function ClubTabs({
           {/* Season filter */}
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
             <div className="flex items-center gap-2 shrink-0">
-              <div className="p-1.5 rounded-lg bg-violet-500/10">
-                <CalendarRange className="h-4 w-4 text-violet-500" />
+              <div className="p-1.5 rounded-lg bg-banner/10">
+                <CalendarRange className="h-4 w-4 text-banner" />
               </div>
               <div>
                 <span className="font-semibold text-sm text-foreground">Temporada</span>
@@ -324,15 +325,15 @@ export function ClubTabs({
                       onClick={() => setSelectedSeasonId(season.id)}
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border ${
                         selectedSeasonId === season.id
-                          ? 'bg-violet-500 text-white border-violet-500 shadow-lg shadow-violet-500/25'
-                          : 'bg-violet-500/5 text-violet-700 dark:text-violet-300 border-violet-500/20 hover:bg-violet-500/10'
+                          ? 'bg-banner text-white border-banner shadow-lg shadow-banner/25'
+                          : 'bg-banner/5 text-banner border-banner/20 hover:bg-banner/10'
                       }`}
                     >
                       {season.name}
                       {season.active && (
                         <span
                           className={`ml-1.5 inline-block w-1.5 h-1.5 rounded-full ${
-                            selectedSeasonId === season.id ? 'bg-white' : 'bg-violet-500'
+                            selectedSeasonId === season.id ? 'bg-white' : 'bg-banner'
                           }`}
                           title="Temporada activa"
                         />
@@ -344,7 +345,7 @@ export function ClubTabs({
                 <select
                   value={selectedSeasonId}
                   onChange={(e) => setSelectedSeasonId(e.target.value)}
-                  className="w-full sm:max-w-xs h-10 rounded-xl border border-violet-500/30 bg-violet-500/5 px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/40 cursor-pointer"
+                  className="w-full sm:max-w-xs h-10 rounded-xl border border-banner/30 bg-banner/5 px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-banner/40 cursor-pointer"
                   aria-label="Seleccionar temporada"
                 >
                   {seasons.map((season) => (
@@ -363,41 +364,17 @@ export function ClubTabs({
         </div>
       </div>
 
-      {/* Competition stats (season-scoped) */}
       {currentStats ? (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger-children">
-            <StatCard
-              title="Partidos Jugados"
-              value={currentStats.totalMatches}
-              subtitle={`${currentStats.wins}V – ${currentStats.draws}E – ${currentStats.losses}D`}
-              icon={Calendar}
-            />
-            <StatCard
-              title="Tasa de Victoria"
-              value={`${winRate}%`}
-              subtitle={currentStats.wins > currentStats.losses ? 'Racha positiva' : 'A mejorar'}
-              icon={Trophy}
-              trend={currentStats.wins > currentStats.losses ? 'up' : 'down'}
-            />
-            <StatCard
-              title="Goles"
-              value={`${currentStats.goalsFor} – ${currentStats.goalsAgainst}`}
-              subtitle={`Diferencia: ${currentStats.goalsFor - currentStats.goalsAgainst > 0 ? '+' : ''}${currentStats.goalsFor - currentStats.goalsAgainst}`}
-              icon={Target}
-              trend={currentStats.goalsFor > currentStats.goalsAgainst ? 'up' : 'down'}
-            />
-            <StatCard
-              title="Jugadores Activos"
-              value={currentStats.totalPlayers}
-              subtitle={currentStats.mostCalled ? `MVP: ${currentStats.mostCalled.name}` : undefined}
-              icon={Users}
-            />
-          </div>
+          <MatchdayHero
+            nextMatch={currentStats.futureMatches[0] ?? null}
+            lastMatch={currentStats.pastMatches[0] ?? null}
+            clubName={currentStats.clubName}
+            seasonName={selectedSeason?.name}
+          />
 
-          {/* Main competition tabs — no Players / Debts */}
           <Tabs defaultValue="matches" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-[560px] h-12">
+            <TabsList className="grid w-full grid-cols-4 lg:w-[580px] h-12">
               <TabsTrigger value="matches" className="gap-1.5">
                 <Calendar className="h-4 w-4 hidden sm:block" />
                 Partidos
@@ -439,8 +416,7 @@ export function ClubTabs({
                         <p className="text-muted-foreground">No hay partidos programados</p>
                       </div>
                     ) : (
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase data
-                      currentStats.futureMatches.slice(0, 3).map((match: any) => (
+                      currentStats.futureMatches.slice(0, 3).map((match) => (
                         <MatchCard key={match.id} match={match} isPast={false} />
                       ))
                     )}
@@ -546,6 +522,35 @@ export function ClubTabs({
 
             {/* Estadísticas */}
             <TabsContent value="stats" className="space-y-6 animate-fade-in">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 stagger-children">
+                <StatCard
+                  title="Partidos Jugados"
+                  value={currentStats.totalMatches}
+                  subtitle={`${currentStats.wins}V – ${currentStats.draws}E – ${currentStats.losses}D`}
+                  icon={Calendar}
+                />
+                <StatCard
+                  title="Tasa de Victoria"
+                  value={`${winRate}%`}
+                  subtitle={currentStats.wins > currentStats.losses ? 'Racha positiva' : 'A mejorar'}
+                  icon={Trophy}
+                  trend={currentStats.wins > currentStats.losses ? 'up' : 'down'}
+                />
+                <StatCard
+                  title="Goles"
+                  value={`${currentStats.goalsFor} – ${currentStats.goalsAgainst}`}
+                  subtitle={`Diferencia: ${currentStats.goalsFor - currentStats.goalsAgainst > 0 ? '+' : ''}${currentStats.goalsFor - currentStats.goalsAgainst}`}
+                  icon={Target}
+                  trend={currentStats.goalsFor > currentStats.goalsAgainst ? 'up' : 'down'}
+                />
+                <StatCard
+                  title="Jugadores Activos"
+                  value={currentStats.totalPlayers}
+                  subtitle={currentStats.mostCalled ? `MVP: ${currentStats.mostCalled.name}` : undefined}
+                  icon={Users}
+                />
+              </div>
+
               <div className="grid gap-6 lg:grid-cols-2">
                 <Card className="glass-card">
                   <CardHeader>
@@ -674,7 +679,7 @@ export function ClubTabs({
                     date: m.date,
                     scoreHome: m.scoreHome,
                     scoreAway: m.scoreAway,
-                    isPast: new Date(m.date) < new Date(),
+                    isPast: parseMatchDate(m.date) < new Date(),
                   })
                 })
                 const opponents = Object.entries(opponentMap).sort(
@@ -955,7 +960,9 @@ export function ClubTabs({
                 <CardContent>
                   {debts.length === 0 ? (
                     <div className="text-center py-10">
-                      <div className="text-4xl mb-3">🎉</div>
+                      <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 mb-3">
+                        <Check className="h-7 w-7 text-emerald-500" />
+                      </div>
                       <p className="text-emerald-500 font-semibold text-lg">¡Todos al corriente!</p>
                       <p className="text-muted-foreground text-sm mt-1">
                         No hay deudas pendientes

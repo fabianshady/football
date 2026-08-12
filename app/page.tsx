@@ -7,6 +7,9 @@ import {
   type SeasonInfo,
   type PlayerRosterEntry,
 } from '@/components/club-tabs'
+import { formatMonthLabel, parseMatchDate } from '@/lib/datetime'
+import { mapRawMatch } from '@/lib/matches'
+import type { Match } from '@/lib/types'
 
 // Usamos ISR (Incremental Static Regeneration)
 // La página mostrará HTML ultrarrápido por 60 segundos antes de recargarse.
@@ -17,11 +20,11 @@ export const revalidate = 60
 function buildClubStats(
   clubName: string,
   seasonId: string,
-  clubMatches: any[],
+  clubMatches: Match[],
   now: Date
 ): ClubStats {
-  const pastMatches = clubMatches.filter((m) => new Date(m.date) < now)
-  const futureMatches = clubMatches.filter((m) => new Date(m.date) >= now).reverse()
+  const pastMatches = clubMatches.filter((m) => parseMatchDate(m.date) < now)
+  const futureMatches = clubMatches.filter((m) => parseMatchDate(m.date) >= now).reverse()
 
   let wins = 0,
     draws = 0,
@@ -38,7 +41,7 @@ function buildClubStats(
 
   const goalCountMap: Record<string, { name: string; dorsal: number; goals: number }> = {}
   clubMatches.forEach((m) => {
-    m.goals.forEach((g: any) => {
+    (m.goals ?? []).forEach((g) => {
       const pid = g.playerId
       if (!goalCountMap[pid]) {
         goalCountMap[pid] = { name: g.player.name, dorsal: g.player.dorsal, goals: 0 }
@@ -52,15 +55,17 @@ function buildClubStats(
 
   const playerSquadCount: Record<string, { name: string; count: number }> = {}
   clubMatches.forEach((m) => {
-    m.squad.forEach((s: any) => {
-      const pid = s.playerId
+    (m.squad ?? []).forEach((s) => {
+      const pid = s.playerId ?? s.player.id
       if (!playerSquadCount[pid]) {
         playerSquadCount[pid] = { name: s.player.name, count: 0 }
       }
       playerSquadCount[pid].count++
     })
   })
-  const uniquePlayerIds = new Set(clubMatches.flatMap((m) => m.squad.map((s: any) => s.playerId)))
+  const uniquePlayerIds = new Set(
+    clubMatches.flatMap((m) => (m.squad ?? []).map((s) => s.playerId ?? s.player.id))
+  )
   const totalPlayers = uniquePlayerIds.size
 
   const mostCalledEntry = Object.values(playerSquadCount).sort((a, b) => b.count - a.count)[0]
@@ -70,11 +75,7 @@ function buildClubStats(
 
   const monthlyData: Record<string, { scored: number; conceded: number }> = {}
   pastMatches.forEach((m) => {
-    const month = new Date(m.date).toLocaleDateString('es-MX', {
-      month: 'short',
-      year: '2-digit',
-      timeZone: 'UTC',
-    })
+    const month = formatMonthLabel(m.date)
     if (!monthlyData[month]) monthlyData[month] = { scored: 0, conceded: 0 }
     monthlyData[month].scored += m.scoreHome
     monthlyData[month].conceded += m.scoreAway
@@ -106,17 +107,17 @@ function buildClubStats(
  * Full player registry (not club-scoped — Player has no club tag).
  * Call-ups / goals are aggregated from all matches for context only.
  */
-function buildPlayerRegistry(rawPlayers: any[], matches: any[]): PlayerRosterEntry[] {
+function buildPlayerRegistry(rawPlayers: any[], matches: Match[]): PlayerRosterEntry[] {
   const callUps: Record<string, number> = {}
   const goals: Record<string, number> = {}
 
   matches.forEach((m) => {
-    m.squad.forEach((s: any) => {
-      const pid = s.playerId as string
+    (m.squad ?? []).forEach((s) => {
+      const pid = s.playerId ?? s.player.id
       callUps[pid] = (callUps[pid] ?? 0) + 1
     })
-    m.goals.forEach((g: any) => {
-      const pid = g.playerId as string
+    ;(m.goals ?? []).forEach((g) => {
+      const pid = g.playerId
       goals[pid] = (goals[pid] ?? 0) + 1
     })
   })
@@ -162,17 +163,7 @@ async function getStats() {
     console.warn('⚠️ Error durante el fetch a Supabase en build:', err)
   }
 
-  const matches = rawMatches.map((m: any) => ({
-    ...m,
-    goals: (m.Goal ?? []).map((g: any) => ({
-      ...g,
-      player: g.Player,
-    })),
-    squad: (m.MatchSquad ?? []).map((s: any) => ({
-      ...s,
-      player: s.Player,
-    })),
-  }))
+  const matches = rawMatches.map((m: any) => mapRawMatch(m))
 
   const seasons: SeasonInfo[] = rawSeasons.map((s: any) => ({
     id: s.id,
@@ -254,25 +245,24 @@ export default async function HomePage() {
   const { seasons, clubStats, allPlayers, debts, totalTeamDebt, totalPlayers } = await getStats()
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-7xl animate-fade-in">
-      {/* Header */}
+    <main className="relative container mx-auto px-4 py-8 max-w-7xl animate-fade-in">
       <header className="relative mb-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="relative">
-            <div className="absolute -inset-2 rounded-full bg-primary/10 blur-xl animate-pulse-soft" />
+            <div className="absolute -inset-2 rounded-full bg-gold/20 blur-xl animate-pulse-soft" />
             <ClubLogo size="lg" className="relative glow-primary" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight gradient-text">
+            <p className="text-xs uppercase tracking-[0.22em] text-gold font-semibold">Club de fútbol</p>
+            <h1 className="font-display text-5xl sm:text-6xl tracking-wide gradient-text">
               ITJAGUARS FC
             </h1>
             <p className="text-muted-foreground text-base sm:text-lg">
-              Dashboard de estadísticas del equipo
+              Jornada, convocatoria y lecturas del equipo
             </p>
           </div>
         </div>
-        {/* Decorative accent line */}
-        <div className="mt-6 h-px bg-gradient-to-r from-primary/50 via-primary/20 to-transparent" />
+        <div className="mt-6 h-px bg-gradient-to-r from-gold/70 via-banner/30 to-transparent" />
       </header>
 
       <ClubTabs
@@ -290,7 +280,7 @@ export default async function HomePage() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} ITJAGUARS FC</p>
           <p className="flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-soft" />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-gold animate-pulse-soft" />
             Datos en tiempo real
           </p>
         </div>
