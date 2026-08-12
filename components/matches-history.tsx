@@ -4,26 +4,7 @@ import { useState } from 'react'
 import { MatchCard } from '@/components/match-card'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-
-interface Player {
-  id: string
-  name: string
-  dorsal: number
-  positions: string[]
-}
-
-interface Match {
-  id: string
-  myTeam: string
-  rivalTeam: string
-  myPos: number
-  rivalPos: number
-  date: Date
-  location: string
-  scoreHome: number
-  scoreAway: number
-  squad?: { player: Player }[]
-}
+import type { Match } from '@/lib/types'
 
 interface MatchesHistoryProps {
   matches: Match[]
@@ -39,21 +20,15 @@ export function MatchesHistory({ matches, initialCount = 5 }: MatchesHistoryProp
   return (
     <div className="space-y-4">
       {matches.length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">
-          No hay partidos registrados
-        </p>
+        <p className="text-muted-foreground text-center py-8">No hay partidos registrados</p>
       ) : (
         <>
           {displayedMatches.map((match) => (
-            <MatchCard key={match.id} match={match} isPast={true} />
+            <MatchCard key={match.id} match={match} isPast />
           ))}
 
           {hasMore && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setShowAll(!showAll)}
-            >
+            <Button variant="outline" className="w-full" onClick={() => setShowAll(!showAll)}>
               {showAll ? (
                 <>
                   <ChevronUp className="h-4 w-4 mr-2" />

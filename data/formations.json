@@ -1,0 +1,36 @@
+{
+  "defaultId": "2-3-1",
+  "playersOnField": 7,
+  "formations": [
+    {
+      "id": "2-3-1",
+      "name": "2-3-1",
+      "label": "2-3-1 · Equilibrada",
+      "summary": "Dos atrás, tres en medio y un punta. Control del balón y amplitud.",
+      "slots": [
+        { "id": "gk", "role": "gk", "side": "C", "label": "Portero", "x": 50, "y": 90 },
+        { "id": "dl", "role": "def", "side": "L", "label": "Defensa izq.", "x": 32, "y": 70 },
+        { "id": "dr", "role": "def", "side": "R", "label": "Defensa der.", "x": 68, "y": 70 },
+        { "id": "ml", "role": "mid", "side": "L", "label": "Interior izq.", "x": 20, "y": 46 },
+        { "id": "mc", "role": "mid", "side": "C", "label": "Medio centro", "x": 50, "y": 50 },
+        { "id": "mr", "role": "mid", "side": "R", "label": "Interior der.", "x": 80, "y": 46 },
+        { "id": "st", "role": "fwd", "side": "C", "label": "Delantero", "x": 50, "y": 20 }
+      ]
+    },
+    {
+      "id": "3-2-1",
+      "name": "3-2-1",
+      "label": "3-2-1 · Compacta",
+      "summary": "Tres atrás y doble pivote. Bloque corto, salidas al contraataque.",
+      "slots": [
+        { "id": "gk", "role": "gk", "side": "C", "label": "Portero", "x": 50, "y": 90 },
+        { "id": "dl", "role": "def", "side": "L", "label": "Defensa izq.", "x": 22, "y": 68 },
+        { "id": "dc", "role": "def", "side": "C", "label": "Defensa central", "x": 50, "y": 72 },
+        { "id": "dr", "role": "def", "side": "R", "label": "Defensa der.", "x": 78, "y": 68 },
+        { "id": "ml", "role": "mid", "side": "L", "label": "Medio izq.", "x": 34, "y": 44 },
+        { "id": "mr", "role": "mid", "side": "R", "label": "Medio der.", "x": 66, "y": 44 },
+        { "id": "st", "role": "fwd", "side": "C", "label": "Delantero", "x": 50, "y": 20 }
+      ]
+    }
+  ]
+}

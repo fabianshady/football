@@ -1,128 +1,94 @@
+import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { formatDateTime } from '@/lib/utils'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
-
-interface Player {
-  id: string
-  name: string
-  dorsal: number
-  positions: string[]
-}
+import { ClientDateTime } from '@/components/client-datetime'
+import { MatchScoreboard } from '@/components/match-scoreboard'
+import { CalendarDays, ChevronRight, MapPin, Users } from 'lucide-react'
+import type { Match } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 interface MatchCardProps {
-  match: {
-    id: string
-    myTeam: string
-    rivalTeam: string
-    myPos: number
-    rivalPos: number
-    date: Date
-    location: string
-    scoreHome: number
-    scoreAway: number
-    squad?: { player: Player }[]
-  }
+  match: Match
   isPast: boolean
 }
 
 export function MatchCard({ match, isPast }: MatchCardProps) {
-  const getResult = () => {
-    if (!isPast) return null
-    if (match.scoreHome > match.scoreAway) return 'win'
-    if (match.scoreHome < match.scoreAway) return 'loss'
-    return 'draw'
-  }
+  const result = !isPast
+    ? null
+    : match.scoreHome > match.scoreAway
+      ? 'win'
+      : match.scoreHome < match.scoreAway
+        ? 'loss'
+        : 'draw'
 
-  const result = getResult()
+  const borderColor =
+    result === 'win'
+      ? 'border-l-emerald-500'
+      : result === 'loss'
+        ? 'border-l-banner'
+        : result === 'draw'
+          ? 'border-l-gold'
+          : 'border-l-sky-500'
 
-  const borderColor = result === 'win'
-    ? 'border-l-emerald-500'
-    : result === 'loss'
-      ? 'border-l-red-500'
-      : result === 'draw'
-        ? 'border-l-yellow-500'
-        : 'border-l-blue-500'
+  const squadCount = match.squad?.length ?? 0
 
   return (
-    <Card className={`overflow-hidden hover-lift border-l-4 ${borderColor} glass-card group`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="h-4 w-4" />
-            <span>{formatDateTime(match.date)}</span>
-          </div>
-          {isPast && result && (
-            <Badge variant={result === 'win' ? 'success' : result === 'loss' ? 'destructive' : 'warning'}>
-              {result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : 'Empate'}
-            </Badge>
-          )}
-          {!isPast && <Badge variant="secondary">Próximo</Badge>}
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 text-center">
-            <p className="font-bold text-lg">{match.myTeam}</p>
-            <Badge variant="outline" className="mt-1">#{match.myPos}°</Badge>
-          </div>
-
-          {isPast ? (
-            <div className="flex items-center gap-3 px-5 py-2.5 bg-muted/60 rounded-xl">
-              <span className="text-2xl font-bold tabular-nums">{match.scoreHome}</span>
-              <span className="text-muted-foreground font-light text-lg">–</span>
-              <span className="text-2xl font-bold tabular-nums">{match.scoreAway}</span>
-            </div>
-          ) : (
-            <div className="px-5 py-2.5 bg-muted/60 rounded-xl">
-              <span className="text-lg font-semibold text-muted-foreground">VS</span>
-            </div>
-          )}
-
-          <div className="flex-1 text-center">
-            <p className="font-bold text-lg">{match.rivalTeam}</p>
-            <Badge variant="outline" className="mt-1">#{match.rivalPos}°</Badge>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4" />
-          <span>{match.location}</span>
-        </div>
-
-        {/* Convocados / Squad */}
-        {match.squad && match.squad.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-border/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">
-                {isPast ? 'Jugaron' : 'Convocados'} ({match.squad.length})
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {match.squad.map((s) => (
-                <Badge
-                  key={s.player.id}
-                  variant="secondary"
-                  className="text-xs px-2 py-1"
-                >
-                  <span className="font-bold mr-1">#{s.player.dorsal}</span>
-                  {s.player.name}
-                </Badge>
-              ))}
-            </div>
-          </div>
+    <Link href={`/partido/${match.id}`} className="block group">
+      <Card
+        className={cn(
+          'overflow-hidden hover-lift border-l-4 glass-card',
+          borderColor
         )}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+              <CalendarDays className="h-4 w-4 shrink-0 text-gold" />
+              <ClientDateTime date={match.date} />
+            </div>
+            {isPast && result && (
+              <Badge
+                className="shrink-0"
+                variant={result === 'win' ? 'success' : result === 'loss' ? 'destructive' : 'warning'}
+              >
+                {result === 'win' ? 'Victoria' : result === 'loss' ? 'Derrota' : 'Empate'}
+              </Badge>
+            )}
+            {!isPast && (
+              <Badge variant="secondary" className="shrink-0">
+                Próximo
+              </Badge>
+            )}
+          </div>
 
-        {/* Mensaje si no hay convocados en partido futuro */}
-        {!isPast && (!match.squad || match.squad.length === 0) && (
-          <div className="mt-4 pt-3 border-t border-border/50">
-            <div className="flex items-center gap-2 text-muted-foreground">
+          <MatchScoreboard
+            myTeam={match.myTeam}
+            rivalTeam={match.rivalTeam}
+            myPos={match.myPos}
+            rivalPos={match.rivalPos}
+            scoreHome={match.scoreHome}
+            scoreAway={match.scoreAway}
+            isPast={isPast}
+            size="card"
+          />
+
+          <div className="flex items-center justify-between gap-3 mt-3 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 min-w-0">
+              <MapPin className="h-4 w-4 shrink-0" />
+              <span className="truncate">{match.location}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 shrink-0">
               <Users className="h-4 w-4" />
-              <span className="text-sm italic">Convocatoria pendiente</span>
-            </div>
+              {squadCount > 0
+                ? `${squadCount} ${isPast ? 'jugaron' : 'convocados'}`
+                : isPast
+                  ? 'Sin lista'
+                  : 'Pendiente'}
+              <ChevronRight className="h-4 w-4 opacity-0 -ml-1 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
+            </span>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   )
 }

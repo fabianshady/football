@@ -18,14 +18,14 @@ export function ResultsChart({ wins, draws, losses }: ResultsChartProps) {
       {
         data: [wins, draws, losses],
         backgroundColor: [
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(250, 204, 21, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
+          'rgba(27, 122, 78, 0.85)',
+          'rgba(224, 179, 58, 0.85)',
+          'rgba(196, 30, 58, 0.85)',
         ],
         borderColor: [
-          'rgba(34, 197, 94, 1)',
-          'rgba(250, 204, 21, 1)',
-          'rgba(239, 68, 68, 1)',
+          'rgba(27, 122, 78, 1)',
+          'rgba(224, 179, 58, 1)',
+          'rgba(196, 30, 58, 1)',
         ],
         borderWidth: 2,
       },
