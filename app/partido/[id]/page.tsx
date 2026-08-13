@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, MapPin, Target, Users } from 'lucide-react'
 import { ClubLogo } from '@/components/club-logo'
@@ -7,6 +6,7 @@ import { FormationLab } from '@/components/formation-lab'
 import { ClientDateTime } from '@/components/client-datetime'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { MatchKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
 import { parseMatchDate } from '@/lib/datetime'
 import { applyPlayerStats, getPlayerCareerStats, mapRawMatch } from '@/lib/matches'
@@ -88,22 +88,6 @@ export default async function MatchDetailPage({ params }: PageProps) {
               <MapPin className="h-4 w-4 text-gold" />
               {match.location}
             </span>
-            {(match.kit === 1 || match.kit === 2) && (
-              <span className="inline-flex items-center gap-1.5">
-                <Image
-                  src={
-                    match.kit === 1
-                      ? 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/1u.png'
-                      : 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/2u.png'
-                  }
-                  alt={match.kit === 1 ? 'Uniforme local' : 'Uniforme visitante'}
-                  width={18}
-                  height={18}
-                  className="object-contain"
-                />
-                {match.kit === 1 ? 'Local (Azul)' : 'Visitante (Guinda)'}
-              </span>
-            )}
           </div>
         </div>
       </header>
@@ -123,9 +107,12 @@ export default async function MatchDetailPage({ params }: PageProps) {
               <Badge className="bg-gold/15 text-foreground border-gold/40">{strengthLabel(strength)}</Badge>
             }
           />
-          {result && (
-            <p className="mt-3 text-center text-xs uppercase tracking-widest text-muted-foreground">{result}</p>
-          )}
+          <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-4">
+            {result && (
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">{result}</p>
+            )}
+            <MatchKit kit={match.kit} size="md" />
+          </div>
         </CardContent>
       </Card>
 

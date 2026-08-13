@@ -6,6 +6,7 @@ import { CalendarDays, ChevronRight, MapPin, Shield, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ClientDateTime } from '@/components/client-datetime'
+import { MatchKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
 import { getCountdownParts, parseMatchDate } from '@/lib/datetime'
 import type { Match } from '@/lib/types'
@@ -28,7 +29,11 @@ function Countdown({ date }: { date: string }) {
   }, [date])
 
   if (parts.expired) {
-    return <p className="text-sm text-muted-foreground">El partido ya está en curso o por comenzar</p>
+    return (
+      <p className="text-center text-sm text-muted-foreground">
+        El partido ya está en curso o por comenzar
+      </p>
+    )
   }
 
   const cells = [
@@ -39,11 +44,11 @@ function Countdown({ date }: { date: string }) {
   ]
 
   return (
-    <div className="flex w-full max-w-sm gap-1.5 sm:gap-2">
+    <div className="mx-auto grid w-full max-w-[17rem] grid-cols-4 gap-1.5 sm:max-w-[20rem] sm:gap-2">
       {cells.map((cell) => (
         <div
           key={cell.label}
-          className="flex-1 min-w-0 max-w-[4.5rem] rounded-xl bg-navy/90 text-center px-1.5 py-2 text-primary-foreground dark:bg-black/30 dark:text-foreground"
+          className="rounded-xl bg-navy/90 px-1 py-2 text-center text-primary-foreground dark:bg-black/30 dark:text-foreground"
         >
           <p className="font-display text-xl sm:text-2xl leading-none tabular-nums">
             {String(cell.value).padStart(2, '0')}
@@ -78,7 +83,6 @@ export function MatchdayHero({ nextMatch, lastMatch, clubName, seasonName }: Mat
 
   return (
     <Card className="glass-card overflow-hidden relative">
-      <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none opacity-40 hidden md:block pitch-board" />
       <CardContent className="relative p-4 sm:p-7">
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <Badge className="bg-banner text-white border-transparent">
@@ -91,49 +95,46 @@ export function MatchdayHero({ nextMatch, lastMatch, clubName, seasonName }: Mat
           )}
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] items-start">
-          <div className="min-w-0">
-            <MatchScoreboard
-              myTeam={featured.myTeam}
-              rivalTeam={featured.rivalTeam}
-              myPos={featured.myPos}
-              rivalPos={featured.rivalPos}
-              scoreHome={featured.scoreHome}
-              scoreAway={featured.scoreAway}
-              isPast={!isUpcoming}
-              size="hero"
-            />
+        <MatchScoreboard
+          myTeam={featured.myTeam}
+          rivalTeam={featured.rivalTeam}
+          myPos={featured.myPos}
+          rivalPos={featured.rivalPos}
+          scoreHome={featured.scoreHome}
+          scoreAway={featured.scoreAway}
+          isPast={!isUpcoming}
+          size="hero"
+        />
 
-            <div className="mt-4 flex flex-col gap-1.5 text-sm text-muted-foreground sm:mt-5 sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-2">
-              <span className="inline-flex items-center gap-1.5 min-w-0">
-                <CalendarDays className="h-4 w-4 shrink-0 text-gold" />
-                <ClientDateTime date={featured.date} />
-              </span>
-              <span className="inline-flex items-center gap-1.5 min-w-0">
-                <MapPin className="h-4 w-4 shrink-0 text-gold" />
-                <span className="break-words">{featured.location}</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Users className="h-4 w-4 shrink-0 text-gold" />
-                {squadCount > 0
-                  ? `${squadCount} convocado${squadCount === 1 ? '' : 's'}`
-                  : isUpcoming
-                    ? 'Convocatoria pendiente'
-                    : 'Sin convocatoria'}
-              </span>
-            </div>
-          </div>
+        <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:mt-5 sm:grid-cols-2">
+          <span className="inline-flex items-center gap-1.5 min-w-0">
+            <CalendarDays className="h-4 w-4 shrink-0 text-gold" />
+            <ClientDateTime date={featured.date} />
+          </span>
+          <span className="inline-flex items-center gap-1.5 min-w-0 sm:justify-end">
+            <MapPin className="h-4 w-4 shrink-0 text-gold" />
+            <span className="truncate">{featured.location}</span>
+          </span>
+          <MatchKit kit={featured.kit} />
+          <span className="inline-flex items-center gap-1.5 min-w-0 sm:justify-end">
+            <Users className="h-4 w-4 shrink-0 text-gold" />
+            {squadCount > 0
+              ? `${squadCount} convocado${squadCount === 1 ? '' : 's'}`
+              : isUpcoming
+                ? 'Convocatoria pendiente'
+                : 'Sin convocatoria'}
+          </span>
+        </div>
 
-          <div className="flex flex-col items-stretch sm:items-start lg:items-end gap-3">
-            {isUpcoming && <Countdown date={featured.date} />}
-            <Link
-              href={`/partido/${featured.id}`}
-              className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-sm font-semibold text-foreground hover:text-gold transition-colors"
-            >
-              Ver detalle y formaciones
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
+        <div className="mt-4 flex flex-col items-center gap-3 sm:mt-5">
+          {isUpcoming && <Countdown date={featured.date} />}
+          <Link
+            href={`/partido/${featured.id}`}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-gold transition-colors"
+          >
+            Ver detalle y formaciones
+            <ChevronRight className="h-4 w-4" />
+          </Link>
         </div>
       </CardContent>
     </Card>

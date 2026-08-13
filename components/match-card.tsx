@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ClientDateTime } from '@/components/client-datetime'
+import { MatchKit, resolveKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
 import { CalendarDays, ChevronRight, MapPin, Users } from 'lucide-react'
 import type { Match } from '@/lib/types'
@@ -11,10 +11,6 @@ import { cn } from '@/lib/utils'
 interface MatchCardProps {
   match: Match
   isPast: boolean
-}
-
-function kitLabel(kit: number): string {
-  return kit === 1 ? 'Local (Azul)' : 'Visitante (Guinda)'
 }
 
 export function MatchCard({ match, isPast }: MatchCardProps) {
@@ -36,7 +32,7 @@ export function MatchCard({ match, isPast }: MatchCardProps) {
           : 'border-l-sky-500'
 
   const squadCount = match.squad?.length ?? 0
-  const kit = match.kit === 1 || match.kit === 2 ? match.kit : null
+  const kit = resolveKit(match.kit)
 
   return (
     <Link href={`/partido/${match.id}`} className="block group">
@@ -84,24 +80,7 @@ export function MatchCard({ match, isPast }: MatchCardProps) {
               <span className="truncate">{match.location}</span>
             </span>
             <div className="flex items-center justify-between gap-3 sm:justify-end">
-              {kit && (
-                <span className="inline-flex items-center gap-1.5 min-w-0">
-                  <Image
-                    src={
-                      kit === 1
-                        ? 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/1u.png'
-                        : 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/2u.png'
-                    }
-                    alt={`Uniforme ${kit === 1 ? 'Local' : 'Visitante'}`}
-                    width={18}
-                    height={18}
-                    className="object-contain drop-shadow-sm"
-                  />
-                  <span className="truncate">
-                    Uniforme: <span className="font-semibold text-foreground">{kitLabel(kit)}</span>
-                  </span>
-                </span>
-              )}
+              {kit && <MatchKit kit={kit} />}
               <span className="inline-flex items-center gap-1.5 shrink-0">
                 <Users className="h-4 w-4" />
                 {squadCount > 0

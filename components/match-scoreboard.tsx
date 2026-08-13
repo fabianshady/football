@@ -14,42 +14,55 @@ interface MatchScoreboardProps {
   rivalExtra?: ReactNode
 }
 
-function TeamBlock({
+function TeamCell({
   name,
   pos,
+  extra,
   align,
   size,
 }: {
   name: string
   pos: number
-  align: 'left' | 'center' | 'right'
+  extra?: ReactNode
+  align: 'start' | 'end'
   size: 'card' | 'hero'
 }) {
   return (
     <div
       className={cn(
-        'min-w-0',
-        align === 'right' && 'text-right',
-        align === 'center' && 'text-center',
-        align === 'left' && 'text-left'
+        'min-w-0 flex flex-col',
+        align === 'end' ? 'items-end text-right' : 'items-start text-left'
       )}
     >
+      {size === 'hero' && (
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          {align === 'end' ? 'Local' : 'Rival'}
+        </p>
+      )}
       <p
         className={cn(
           'font-display leading-tight break-words',
-          size === 'hero' ? 'text-xl sm:text-3xl lg:text-4xl' : 'text-lg sm:text-xl'
+          size === 'hero' ? 'text-xl sm:text-3xl lg:text-4xl mt-0.5' : 'text-base sm:text-lg'
         )}
       >
         {name}
       </p>
-      <Badge variant="outline" className="mt-1.5">
-        #{pos}°
-      </Badge>
+      <div
+        className={cn(
+          'mt-1 flex flex-wrap gap-1',
+          align === 'end' ? 'justify-end' : 'justify-start'
+        )}
+      >
+        <Badge variant="outline" className="text-[10px] sm:text-xs">
+          #{pos}°
+        </Badge>
+        {extra}
+      </div>
     </div>
   )
 }
 
-function ScoreBlock({
+function ScoreCell({
   isPast,
   scoreHome,
   scoreAway,
@@ -63,20 +76,20 @@ function ScoreBlock({
   return (
     <div
       className={cn(
-        'shrink-0 rounded-xl text-center bg-navy text-primary-foreground dark:bg-black/40',
-        size === 'hero' ? 'px-4 py-2.5 sm:px-5 sm:py-3' : 'px-3 py-1.5 sm:px-4 sm:py-2'
+        'flex h-full w-full items-center justify-center rounded-xl bg-navy text-primary-foreground dark:bg-black/40',
+        size === 'hero' ? 'min-h-[3.25rem] sm:min-h-[3.75rem]' : 'min-h-[2.75rem]'
       )}
     >
       {isPast ? (
         <p
           className={cn(
             'font-display tabular-nums leading-none',
-            size === 'hero' ? 'text-3xl sm:text-4xl' : 'text-xl sm:text-2xl'
+            size === 'hero' ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl'
           )}
         >
-          {scoreHome}
-          <span className="mx-1 opacity-50">–</span>
-          {scoreAway}
+          <span className="inline-block w-[2ch] text-right">{scoreHome}</span>
+          <span className="mx-0.5 opacity-50">–</span>
+          <span className="inline-block w-[2ch] text-left">{scoreAway}</span>
         </p>
       ) : (
         <p className={cn('font-display leading-none', size === 'hero' ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl')}>
@@ -98,67 +111,18 @@ export function MatchScoreboard({
   size = 'card',
   rivalExtra,
 }: MatchScoreboardProps) {
-  if (size === 'card') {
-    return (
-      <>
-        <div className="space-y-2 sm:hidden">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-display text-lg leading-tight break-words">{myTeam}</p>
-              <span className="text-[11px] text-muted-foreground">#{myPos}°</span>
-            </div>
-            {isPast ? (
-              <span className="font-display text-2xl tabular-nums shrink-0">{scoreHome}</span>
-            ) : null}
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-display text-lg leading-tight break-words">{rivalTeam}</p>
-              <span className="text-[11px] text-muted-foreground">#{rivalPos}°</span>
-            </div>
-            {isPast ? (
-              <span className="font-display text-2xl tabular-nums shrink-0">{scoreAway}</span>
-            ) : (
-              <span className="font-display text-lg shrink-0 text-muted-foreground">VS</span>
-            )}
-          </div>
-        </div>
-
-        <div className="hidden sm:flex items-center justify-between gap-3">
-          <TeamBlock name={myTeam} pos={myPos} align="center" size="card" />
-          <ScoreBlock isPast={isPast} scoreHome={scoreHome} scoreAway={scoreAway} size="card" />
-          <TeamBlock name={rivalTeam} pos={rivalPos} align="center" size="card" />
-        </div>
-      </>
-    )
-  }
-
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-4">
-      <div className="text-center sm:text-left min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Local</p>
-        <p className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight break-words mt-0.5">
-          {myTeam}
-        </p>
-        <Badge variant="outline" className="mt-1.5">
-          #{myPos}°
-        </Badge>
-      </div>
-
-      <div className="justify-self-center">
-        <ScoreBlock isPast={isPast} scoreHome={scoreHome} scoreAway={scoreAway} size="hero" />
-      </div>
-
-      <div className="text-center sm:text-right min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rival</p>
-        <p className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight break-words mt-0.5">
-          {rivalTeam}
-        </p>
-        <div className={cn('mt-1.5 flex flex-wrap gap-1.5', 'justify-center sm:justify-end')}>
-          <Badge variant="outline">#{rivalPos}°</Badge>
-          {rivalExtra}
-        </div>
-      </div>
+    <div
+      className={cn(
+        'grid items-center',
+        size === 'hero'
+          ? 'grid-cols-[minmax(0,1fr)_4.75rem_minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_6.5rem_minmax(0,1fr)] gap-2 sm:gap-4'
+          : 'grid-cols-[minmax(0,1fr)_4.25rem_minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_5.5rem_minmax(0,1fr)] gap-2 sm:gap-3'
+      )}
+    >
+      <TeamCell name={myTeam} pos={myPos} align="end" size={size} />
+      <ScoreCell isPast={isPast} scoreHome={scoreHome} scoreAway={scoreAway} size={size} />
+      <TeamCell name={rivalTeam} pos={rivalPos} extra={rivalExtra} align="start" size={size} />
     </div>
   )
 }
