@@ -76,7 +76,7 @@ function ScoreCell({
   return (
     <div
       className={cn(
-        'flex h-full w-full items-center justify-center rounded-xl bg-navy text-primary-foreground dark:bg-black/40',
+        'flex h-full w-full items-center justify-center rounded-xl bg-navy text-navy-foreground ring-1 ring-gold/25',
         size === 'hero' ? 'min-h-[3.25rem] sm:min-h-[3.75rem]' : 'min-h-[2.75rem]'
       )}
     >

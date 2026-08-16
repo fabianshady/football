@@ -22,6 +22,7 @@
   --color-ring: hsl(var(--ring));
   --color-gold: hsl(var(--gold));
   --color-navy: hsl(var(--navy));
+  --color-navy-foreground: hsl(var(--navy-foreground));
   --color-pitch: hsl(var(--pitch));
   --color-banner: hsl(var(--banner));
   --radius: 0.85rem;
@@ -95,6 +96,7 @@
     --ring: 42 73% 48%;
     --gold: 42 73% 48%;
     --navy: 218 68% 18%;
+    --navy-foreground: 40 33% 96%;
     --pitch: 152 64% 29%;
     --banner: 349 74% 44%;
   }
@@ -121,7 +123,8 @@
       --input: 216 28% 20%;
       --ring: 42 73% 55%;
       --gold: 42 73% 55%;
-      --navy: 218 55% 12%;
+      --navy: 216 36% 22%;
+      --navy-foreground: 40 29% 96%;
       --pitch: 152 52% 32%;
       --banner: 349 72% 52%;
     }

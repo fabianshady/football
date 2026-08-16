@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { ClientDateTime } from '@/components/client-datetime'
 import { MatchKit, resolveKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
-import { CalendarDays, ChevronRight, MapPin, Users } from 'lucide-react'
+import { MatchSquadList } from '@/components/match-squad'
+import { CalendarDays, ChevronRight, MapPin } from 'lucide-react'
 import type { Match } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +32,6 @@ export function MatchCard({ match, isPast }: MatchCardProps) {
           ? 'border-l-gold'
           : 'border-l-sky-500'
 
-  const squadCount = match.squad?.length ?? 0
   const kit = resolveKit(match.kit)
 
   return (
@@ -81,16 +81,15 @@ export function MatchCard({ match, isPast }: MatchCardProps) {
             </span>
             <div className="flex items-center justify-between gap-3 sm:justify-end">
               {kit && <MatchKit kit={kit} />}
-              <span className="inline-flex items-center gap-1.5 shrink-0">
-                <Users className="h-4 w-4" />
-                {squadCount > 0
-                  ? `${squadCount} ${isPast ? 'jugaron' : 'convocados'}`
-                  : isPast
-                    ? 'Sin lista'
-                    : 'Pendiente'}
-                <ChevronRight className="h-4 w-4 opacity-0 -ml-1 transition-all group-hover:opacity-100 group-hover:translate-x-0.5" />
+              <span className="inline-flex items-center gap-1.5 shrink-0 text-foreground/80">
+                Ver detalle
+                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </span>
             </div>
+          </div>
+
+          <div className="mt-3 border-t border-border/40 pt-3">
+            <MatchSquadList squad={match.squad} isPast={isPast} />
           </div>
         </CardContent>
       </Card>

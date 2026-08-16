@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { CalendarDays, ChevronRight, MapPin, Shield, Users } from 'lucide-react'
+import { CalendarDays, ChevronRight, MapPin, Shield } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ClientDateTime } from '@/components/client-datetime'
 import { MatchKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
+import { MatchSquadList } from '@/components/match-squad'
 import { getCountdownParts, parseMatchDate } from '@/lib/datetime'
 import type { Match } from '@/lib/types'
 
@@ -48,12 +49,12 @@ function Countdown({ date }: { date: string }) {
       {cells.map((cell) => (
         <div
           key={cell.label}
-          className="rounded-xl bg-navy/90 px-1 py-2 text-center text-primary-foreground dark:bg-black/30 dark:text-foreground"
+          className="rounded-xl bg-navy px-1 py-2 text-center text-navy-foreground ring-1 ring-gold/25"
         >
           <p className="font-display text-xl sm:text-2xl leading-none tabular-nums">
             {String(cell.value).padStart(2, '0')}
           </p>
-          <p className="mt-1 text-[10px] uppercase tracking-wider text-primary-foreground/70 dark:text-muted-foreground">
+          <p className="mt-1 text-[10px] uppercase tracking-wider text-navy-foreground/70">
             {cell.label}
           </p>
         </div>
@@ -78,8 +79,6 @@ export function MatchdayHero({ nextMatch, lastMatch, clubName, seasonName }: Mat
       </Card>
     )
   }
-
-  const squadCount = featured.squad?.length ?? 0
 
   return (
     <Card className="glass-card overflow-hidden relative">
@@ -116,14 +115,10 @@ export function MatchdayHero({ nextMatch, lastMatch, clubName, seasonName }: Mat
             <span className="truncate">{featured.location}</span>
           </span>
           <MatchKit kit={featured.kit} />
-          <span className="inline-flex items-center gap-1.5 min-w-0 sm:justify-end">
-            <Users className="h-4 w-4 shrink-0 text-gold" />
-            {squadCount > 0
-              ? `${squadCount} convocado${squadCount === 1 ? '' : 's'}`
-              : isUpcoming
-                ? 'Convocatoria pendiente'
-                : 'Sin convocatoria'}
-          </span>
+        </div>
+
+        <div className="mt-4 border-t border-border/40 pt-4">
+          <MatchSquadList squad={featured.squad} isPast={!isUpcoming} />
         </div>
 
         <div className="mt-4 flex flex-col items-center gap-3 sm:mt-5">

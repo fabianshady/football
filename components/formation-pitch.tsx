@@ -38,7 +38,7 @@ export function FormationPitch({ formation, assignment, className }: FormationPi
               className={cn(
                 'mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 text-sm font-bold shadow-lg',
                 player
-                  ? 'border-gold bg-navy text-primary-foreground dark:text-foreground'
+                  ? 'border-gold bg-navy text-navy-foreground'
                   : 'border-dashed border-white/50 bg-black/20 text-white/70'
               )}
               title={slot.label}
