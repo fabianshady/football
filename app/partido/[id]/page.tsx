@@ -9,34 +9,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MatchKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
 import { parseMatchDate } from '@/lib/datetime'
-import { applyPlayerStats, getPlayerCareerStats, mapRawMatch } from '@/lib/matches'
+import { dataConfigured, getMatch } from '@/lib/queries'
+import { DataUnavailable } from '@/components/page-heading'
 import { opponentStrength, strengthLabel } from '@/lib/tactics'
-import { supabase } from '@/lib/supabase'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
-async function getMatch(id: string) {
-  const { data, error } = await supabase
-    .from('Match')
-    .select('*, Goal(*, Player(*)), MatchSquad(*, Player(*))')
-    .eq('id', id)
-    .maybeSingle()
-
-  if (error) {
-    console.warn('⚠️ Fallo al obtener partido:', error.message)
-    return null
-  }
-  if (!data) return null
-  const match = mapRawMatch(data as Record<string, unknown>)
-  const stats = await getPlayerCareerStats()
-  return applyPlayerStats(match, stats)
-}
-
 export async function generateMetadata({ params }: PageProps) {
+  if (!dataConfigured) return { title: 'Partido' }
   const { id } = await params
   const match = await getMatch(id)
   if (!match) return { title: 'Partido' }
@@ -47,6 +31,7 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function MatchDetailPage({ params }: PageProps) {
+  if (!dataConfigured) return <DataUnavailable />
   const { id } = await params
   const match = await getMatch(id)
   if (!match) notFound()
@@ -64,22 +49,22 @@ export default async function MatchDetailPage({ params }: PageProps) {
   const goals = match.goals ?? []
 
   return (
-    <main className="relative container mx-auto px-4 py-8 max-w-7xl animate-fade-in">
+    <main className="page-shell">
       <Link
-        href="/"
+        href={match.teamSlug ? `/${match.teamSlug}/partidos${match.seasonid ? `?temporada=${encodeURIComponent(match.seasonid)}` : ''}` : '/'}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al dashboard
+        Volver a partidos
       </Link>
 
       <header className="flex items-start gap-3 sm:gap-4 mb-8">
-        <ClubLogo size="md" className="glow-primary shrink-0" />
+        <ClubLogo size="md" className="shrink-0" />
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-gold font-semibold">
             {isPast ? 'Resultado' : 'Próximo partido'}
           </p>
-          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl tracking-wide mt-1 break-words">
+           <h1 className="text-3xl sm:text-4xl lg:text-5xl mt-2 break-words">
             {match.myTeam} vs {match.rivalTeam}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
@@ -92,7 +77,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
         </div>
       </header>
 
-      <Card className="glass-card mb-8 overflow-hidden">
+      <Card className="mb-8 overflow-hidden bg-secondary">
         <CardContent className="p-4 sm:p-8">
           <MatchScoreboard
             myTeam={match.myTeam}
@@ -118,7 +103,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
 
       <div className="grid gap-6 lg:grid-cols-2 mb-8">
         {isPast && (
-          <Card className="glass-card">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-display text-2xl">
                 <Target className="h-5 w-5 text-gold" />
@@ -148,7 +133,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
           </Card>
         )}
 
-        <Card className="glass-card">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-display text-2xl">
               <Users className="h-5 w-5 text-gold" />

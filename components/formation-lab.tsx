@@ -35,11 +35,11 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-      <Card className="glass-card">
+      <Card>
         <CardHeader>
-          <CardTitle className="font-display text-2xl tracking-wide">Probar formación</CardTitle>
+           <CardTitle className="text-2xl">Probar formación</CardTitle>
           <CardDescription>
-            Fútbol 7 · portero + 6. Se acomoda por línea, lado `(L)`/`(R)` y, si empatan, por
+            Fútbol 7 · portero + 6. Se acomoda por línea, lado (L)/(R) y, si empatan, por
             convocatorias y goles.
           </CardDescription>
         </CardHeader>
@@ -48,14 +48,15 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
             {formations.map((item) => (
               <button
                 key={item.id}
-                type="button"
+                 type="button"
+                 aria-pressed={formation.id === item.id}
                 onClick={() => {
                   setFormationId(item.id)
                   setGkIndex(0)
                 }}
                 className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                   formation.id === item.id
-                    ? 'bg-navy text-primary-foreground shadow-lg dark:bg-gold dark:text-navy'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted/60 text-muted-foreground hover:bg-muted border border-border/50'
                 }`}
               >
@@ -73,7 +74,8 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
                 {variants.map((variant, index) => (
                   <button
                     key={variant.gk?.id ?? `empty-${index}`}
-                    type="button"
+                     type="button"
+                     aria-pressed={safeIndex === index}
                     onClick={() => setGkIndex(index)}
                     className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all ${
                       safeIndex === index
@@ -92,7 +94,7 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
           {current ? (
             <FormationPitch formation={formation} assignment={current.assignment} />
           ) : (
-            <p className="text-sm text-muted-foreground">No hay convocatoria para armar XI.</p>
+             <p className="text-sm text-muted-foreground">No hay convocatoria para armar la alineación.</p>
           )}
 
           {current && current.bench.length > 0 && (
@@ -110,7 +112,7 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
         </CardContent>
       </Card>
 
-      <Card className="glass-card">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-2xl tracking-wide">
             <Swords className="h-5 w-5 text-gold" />

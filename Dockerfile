@@ -2,7 +2,7 @@
 # STAGE 1: DEPENDENCIES
 # Install all Node.js dependencies (including devDependencies for TS build)
 # =============================================================================
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 
 # libc6-compat is required for Next.js to work properly on Alpine Linux
 RUN apk add --no-cache libc6-compat
@@ -18,7 +18,7 @@ RUN npm ci
 # STAGE 2: BUILDER
 # Build the Next.js app with standalone output
 # =============================================================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -47,7 +47,7 @@ RUN npm run build
 # STAGE 3: RUNNER (PRODUCTION)
 # Minimal image with only the files needed to run the standalone server
 # =============================================================================
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

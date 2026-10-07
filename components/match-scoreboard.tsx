@@ -36,12 +36,12 @@ function TeamCell({
     >
       {size === 'hero' && (
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          {align === 'end' ? 'Local' : 'Rival'}
+          {align === 'end' ? 'Nuestro equipo' : 'Rival'}
         </p>
       )}
       <p
         className={cn(
-          'font-display leading-tight break-words',
+          'font-semibold leading-tight break-words',
           size === 'hero' ? 'text-xl sm:text-3xl lg:text-4xl mt-0.5' : 'text-base sm:text-lg'
         )}
       >
@@ -53,9 +53,9 @@ function TeamCell({
           align === 'end' ? 'justify-end' : 'justify-start'
         )}
       >
-        <Badge variant="outline" className="text-[10px] sm:text-xs">
+        {pos > 0 && <Badge variant="outline" className="text-[10px] sm:text-xs">
           #{pos}°
-        </Badge>
+        </Badge>}
         {extra}
       </div>
     </div>
@@ -83,13 +83,13 @@ function ScoreCell({
       {isPast ? (
         <p
           className={cn(
-            'font-display tabular-nums leading-none',
+            'font-display tabular-nums leading-none whitespace-nowrap',
             size === 'hero' ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-2xl'
           )}
         >
-          <span className="inline-block w-[2ch] text-right">{scoreHome}</span>
+          <span>{scoreHome}</span>
           <span className="mx-0.5 opacity-50">–</span>
-          <span className="inline-block w-[2ch] text-left">{scoreAway}</span>
+          <span>{scoreAway}</span>
         </p>
       ) : (
         <p className={cn('font-display leading-none', size === 'hero' ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl')}>

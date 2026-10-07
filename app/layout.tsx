@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { Barlow_Condensed, Inter } from 'next/font/google'
+import { Inter } from 'next/font/google'
+import Link from 'next/link'
+import { ClubLogo } from '@/components/club-logo'
+import { SiteNav } from '@/components/site-nav'
+import { ThemeControl } from '@/components/theme-control'
+import { themeScript } from '@/lib/theme'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -10,17 +15,10 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
-const barlowCondensed = Barlow_Condensed({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  display: 'swap',
-  variable: '--font-barlow-condensed',
-})
-
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f1ea' },
-    { media: '(prefers-color-scheme: dark)', color: '#071221' },
+    { media: '(prefers-color-scheme: light)', color: '#f7f8fc' },
+    { media: '(prefers-color-scheme: dark)', color: '#111827' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -69,10 +67,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${barlowCondensed.variable}`}>
+    <html lang="es" className={inter.variable} suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body className={inter.className}>
-        <div className="min-h-screen animated-gradient-bg">
-          {children}
+        <div className="min-h-screen">
+          <a className="skip-link" href="#contenido">Saltar al contenido</a>
+          <header className="site-header">
+            <Link className="brand" href="/" aria-label="ITJAGUARS FC · Inicio"><ClubLogo size="sm" /><span>ITJAGUARS <span className="text-muted-foreground font-normal">FC</span></span></Link>
+            <SiteNav />
+            <ThemeControl />
+          </header>
+          <div id="contenido">{children}</div>
+          <footer className="page-shell !py-6 flex flex-wrap justify-between gap-3 text-xs text-muted-foreground border-t"><p>© {new Date().getFullYear()} ITJAGUARS FC</p><p>Hecho para el equipo. Desde Tijuana.</p></footer>
           <Analytics />
           <SpeedInsights />
         </div>

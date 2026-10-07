@@ -1,5 +1,4 @@
-import type { Match, MatchGoal, MatchSquadEntry, Player } from '@/lib/types'
-import { supabase } from '@/lib/supabase'
+import type { Match, MatchGoal, MatchSquadEntry, Player } from './types.ts'
 
 function mapPlayer(raw: Record<string, unknown> | null | undefined): Player | null {
   if (!raw || typeof raw.id !== 'string') return null
@@ -11,33 +10,6 @@ function mapPlayer(raw: Record<string, unknown> | null | undefined): Player | nu
     callUps: typeof raw.callUps === 'number' ? raw.callUps : undefined,
     goals: typeof raw.goals === 'number' ? raw.goals : undefined,
   }
-}
-
-export async function getPlayerCareerStats(): Promise<Record<string, { callUps: number; goals: number }>> {
-  const [squadRes, goalRes] = await Promise.all([
-    supabase.from('MatchSquad').select('playerId'),
-    supabase.from('Goal').select('playerId'),
-  ])
-
-  const callUps: Record<string, number> = {}
-  for (const row of squadRes.data ?? []) {
-    const id = row.playerId as string | null
-    if (!id) continue
-    callUps[id] = (callUps[id] ?? 0) + 1
-  }
-
-  const goals: Record<string, number> = {}
-  for (const row of goalRes.data ?? []) {
-    const id = row.playerId as string | null
-    if (!id) continue
-    goals[id] = (goals[id] ?? 0) + 1
-  }
-
-  const stats: Record<string, { callUps: number; goals: number }> = {}
-  for (const id of new Set([...Object.keys(callUps), ...Object.keys(goals)])) {
-    stats[id] = { callUps: callUps[id] ?? 0, goals: goals[id] ?? 0 }
-  }
-  return stats
 }
 
 export function applyPlayerStats(
@@ -82,7 +54,10 @@ export function mapRawMatch(raw: Record<string, unknown>): Match {
 
   return {
     id: String(raw.id),
-    myTeam: String(raw.myTeam ?? ''),
+    teamId: typeof raw.teamId === 'string' ? raw.teamId : undefined,
+    teamSlug: typeof raw.team_slug === 'string' ? raw.team_slug : undefined,
+    scheduleOverride: raw.schedule_override === true,
+    myTeam: String(raw.team_name ?? raw.myTeam ?? ''),
     rivalTeam: String(raw.rivalTeam ?? ''),
     myPos: Number(raw.myPos ?? 0),
     rivalPos: Number(raw.rivalPos ?? 0),

@@ -11,3 +11,11 @@ Dockerfile
 docker-compose.yml
 README.md
 .dockerignore
+.agents
+tests/artifacts
+test-results
+playwright-report
+blob-report
+playwright/.auth
+tests/.auth
+*.tsbuildinfo
