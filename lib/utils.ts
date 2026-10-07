@@ -11,25 +11,3 @@ export function formatCurrency(amount: number): string {
     currency: 'MXN',
   }).format(amount)
 }
-
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('es-MX', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(date))
-}
-
-/** @deprecated Use ClientDateTime / formatViewerDateTime from @/lib/datetime */
-export function formatDateTime(date: Date | string): string {
-  return new Intl.DateTimeFormat('es-MX', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'America/Tijuana',
-  }).format(new Date(date))
-}

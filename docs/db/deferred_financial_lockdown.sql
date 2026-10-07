@@ -1,0 +1,13 @@
+-- HISTORICAL MANUAL RECORD: financial lockdown is already applied remotely.
+-- Version 20261007190054, name financial_public_projection_lockdown.
+-- Canonical SQL: ../../supabase/migrations/20261007190054_financial_public_projection_lockdown.sql
+-- Do not replay: the original policies have already been dropped.
+-- anon has no SELECT privilege on Event/Payment; sanitized v_player_debt remains readable.
+-- See MIGRATION_NOTES.md for execution evidence and current operational status.
+
+-- Emergency reversal only (requires explicit authorization and fresh policy review):
+-- begin;
+-- grant select on public."Event", public."Payment" to anon;
+-- create policy "La raza puede ver los eventos" on public."Event" for select to anon using (true);
+-- create policy "La raza puede ver los pagos" on public."Payment" for select to anon using (true);
+-- commit;

@@ -1,60 +1,6 @@
-'use client'
-
-import { Bar } from 'react-chartjs-2'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js'
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
-
-interface GoalsChartProps {
-  data: { name: string; goals: number; dorsal: number }[]
-}
-
-export function GoalsChart({ data }: GoalsChartProps) {
-  const chartData = {
-    labels: data.map((p) => `#${p.dorsal} ${p.name.split(' ')[0]}`),
-    datasets: [
-      {
-        label: 'Goles',
-        data: data.map((p) => p.goals),
-        backgroundColor: 'rgba(224, 179, 58, 0.85)',
-        borderColor: 'rgba(196, 149, 32, 1)',
-        borderWidth: 2,
-        borderRadius: 8,
-      },
-    ],
-  }
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      title: { display: false },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { stepSize: 1, color: '#9ca3af' },
-        grid: { color: 'rgba(156, 163, 175, 0.1)' },
-      },
-      x: {
-        ticks: { color: '#9ca3af' },
-        grid: { display: false },
-      },
-    },
-  }
-
-  return (
-    <div className="h-[300px]">
-      <Bar data={chartData} options={options} />
-    </div>
-  )
+import { useId } from 'react'
+export function GoalsChart({ goalsFor, goalsAgainst }: { goalsFor: number; goalsAgainst: number }) {
+  const id = useId()
+  const max = Math.max(goalsFor, goalsAgainst, 1)
+  return <figure><svg viewBox="0 0 340 150" className="w-full h-48" role="img" aria-labelledby={id}><title id={id}>{`${goalsFor} goles a favor y ${goalsAgainst} goles en contra.`}</title>{[{ label: 'A favor', value: goalsFor, color: 'var(--primary)' }, { label: 'En contra', value: goalsAgainst, color: 'var(--gold-fill)' }].map((item, index) => <g key={item.label}><text x="0" y={24 + index * 70} fontSize="13" fill="var(--muted-foreground)">{item.label}</text><rect x="0" y={34 + index * 70} width="290" height="22" rx="11" fill="var(--muted)" /><rect x="0" y={34 + index * 70} width={290 * item.value / max} height="22" rx="11" fill={item.color} /><text x="330" y={51 + index * 70} textAnchor="end" fontSize="16" fontWeight="600" fill="var(--foreground)">{item.value}</text></g>)}</svg><figcaption className="text-sm text-muted-foreground">Diferencia de goles: <strong className="text-foreground">{goalsFor - goalsAgainst > 0 ? '+' : ''}{goalsFor - goalsAgainst}</strong></figcaption></figure>
 }

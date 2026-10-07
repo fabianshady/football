@@ -1,8 +1,7 @@
 node_modules
 .next
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 
 # Build output
 out/
@@ -19,7 +18,15 @@ npm-debug.log*
 .vercel
 
 # TypeScript incremental build
-tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Browser verification output and authenticated browser state
+tests/artifacts/
+test-results/
+playwright-report/
+blob-report/
+playwright/.auth/
+tests/.auth/
 
 # Claude
 CLAUDE.md

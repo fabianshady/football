@@ -1,8 +1,11 @@
+import 'server-only'
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/database.types'
 
-// Durante el build de Docker, estas variables pueden no estar presentes.
-// Usamos valores placeholder para evitar que el proceso de build falle.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'placeholder'
+const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+/** No placeholder connection: missing configuration is an explicit unavailable state. */
+export const supabase = url && key ? createClient<Database>(url, key, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+}) : null
