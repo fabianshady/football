@@ -16,7 +16,7 @@ export function ClubLogo({ size = 'md', className = '' }: ClubLogoProps) {
     <div className={`${sizes[size]} rounded-full bg-primary/20 flex items-center justify-center ${className}`}>
       {
         <Image
-           src="/logo.png"
+           src="/brand/logo.webp"
            alt="Escudo ITJAGUARS FC"
           width={size === 'lg' ? 96 : size === 'md' ? 64 : 40}
           height={size === 'lg' ? 96 : size === 'md' ? 64 : 40}

@@ -8,9 +8,10 @@ import { Metrics } from '@/components/metrics'
 import { ResultsChart } from '@/components/charts/results-chart'
 import { GoalsChart } from '@/components/charts/goals-chart'
 import { MonthlyGoalsChart } from '@/components/charts/monthly-goals-chart'
+import { teamMetadata } from '@/lib/team-metadata'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Estadísticas' }
+export async function generateMetadata(props: TeamPageProps) { return teamMetadata(props, 'estadisticas') }
 
 export default async function StatsPage(props: TeamPageProps) {
   if (!dataConfigured) return <DataUnavailable />

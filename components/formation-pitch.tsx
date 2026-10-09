@@ -1,5 +1,6 @@
 import type { FormationDef, LineupAssignment } from '@/lib/tactics'
 import { cn } from '@/lib/utils'
+import { playerDisplayName } from '@/lib/public'
 
 interface FormationPitchProps {
   formation: FormationDef
@@ -41,12 +42,12 @@ export function FormationPitch({ formation, assignment, className }: FormationPi
                   ? 'border-gold bg-navy text-navy-foreground'
                   : 'border-dashed border-white/50 bg-black/20 text-white/70'
               )}
-              title={slot.label}
+               title={`${slot.label}: ${player?.name ?? 'Vacante'}`}
             >
               {player ? `#${player.dorsal}` : '—'}
             </div>
-            <p className="mt-1 truncate text-[11px] font-semibold text-white drop-shadow">
-              {player ? player.name.split(' ')[0] : slot.label}
+            <p className="mt-1 truncate text-[11px] font-semibold text-white drop-shadow" aria-label={`${slot.label}: ${player?.name ?? 'Vacante'}`} title={player?.name}>
+              {player ? playerDisplayName(player) : slot.label}
             </p>
           </div>
         )

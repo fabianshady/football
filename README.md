@@ -27,6 +27,8 @@ La plantilla `.env.example` contiene únicamente nombres y valores vacíos. El s
 | `NEXT_PUBLIC_SUPABASE_URL` | Alternativa compatible a la URL de servidor. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Alternativa compatible a la clave de servidor; también utilizada por administración. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Última alternativa para instalaciones con la antigua clave `anon`. |
+| `SITE_URL` | Origen canónico opcional; predeterminado `https://itjaguars.fabianms.com`. |
+| `SITE_ENV` | En hosting propio: `production` indexable, `preview`/`development` noindex. `VERCEL_ENV` tiene prioridad. |
 
 Completar la pareja de servidor **o** la pareja `NEXT_PUBLIC_`. Las variables de servidor tienen prioridad y permiten configurar el contenedor al arrancar. Solo se necesita una clave publicable/anon, **no una clave `service_role`**. Obtener URL y clave en la configuración API del proyecto Supabase. Los archivos `.env*` locales están excluidos de Git salvo la plantilla.
 
@@ -41,12 +43,19 @@ Sin credenciales, el sitio muestra un estado explícito de configuración no dis
 | `/[equipo]/partidos` | Archivo con búsqueda y filtros. |
 | `/[equipo]/estadisticas` | Métricas, gráficos SVG y goleadores. |
 | `/plantilla` | Jugadores activos y totales acumulados. |
+| `/plantilla/[id]` | Ficha, posiciones y carrera registrada del jugador. |
 | `/finanzas` | Aportaciones pendientes y datos públicos de transferencia. |
 | `/partido/[id]` | Marcador, goles, convocatoria, uniforme y pizarra de fútbol 7. |
 
 Los slugs provienen de `team` (actualmente `itjaguars` e `itj-fc`); `/itj` es una ruta obsoleta. `?temporada=<id>` mantiene la selección entre páginas del equipo. Equipos, temporadas o partidos inexistentes muestran la vista 404.
 
 ## Arquitectura y datos
+
+### Marca y metadatos públicos
+
+Cada ruta pública declara título, descripción, canonical, Open Graph y Twitter. Las tarjetas dinámicas de equipo y partido usan registros reales; el club y los partidos incluyen JSON-LD seguro. `/manifest.webmanifest`, `/robots.txt` y `/sitemap.xml` completan la configuración pública. Desarrollo y Preview bloquean indexación; en contenedores de pruebas configurar `SITE_ENV=preview`.
+
+Las seis imágenes aportadas en `resources/` son fuentes de edición. `npm run prepare:brand` genera las versiones optimizadas de `public/brand/`, iconos y fondos OG. Ver [inventario, reproducción y reglas SEO](docs/design/ASSETS.md).
 
 - Next.js 16.1.6 App Router, React 19 y TypeScript.
 - Tailwind CSS 4: tokens y estilos en `app/globals.css`, sin configuración legacy de Tailwind.
@@ -120,6 +129,7 @@ Con `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` se configura el servidor en runt
 ## Documentación
 
 - [Sistema visual y comportamiento](docs/design/DESIGN.md).
+- [Recursos de marca y metadatos](docs/design/ASSETS.md).
 - [Estado del contrato de base de datos](docs/db/MIGRATION_HANDOFF.md).
 - [Notas, permisos, verificación y rollback](docs/db/MIGRATION_NOTES.md).
 - [Verificación de navegador](tests/e2e/README.md).

@@ -5,6 +5,7 @@ import { ClubLogo } from '@/components/club-logo'
 import { SiteNav } from '@/components/site-nav'
 import { ThemeControl } from '@/components/theme-control'
 import { themeScript } from '@/lib/theme'
+import { BRAND, HOME_DESCRIPTION, canonicalOrigin, pageMetadata } from '@/lib/seo'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -25,43 +26,18 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://itjaguars.fabianms.com'),
+  ...pageMetadata(BRAND, HOME_DESCRIPTION, '/'),
+  metadataBase: canonicalOrigin(),
   title: {
-    default: 'ITJAGUARS FC Stats',
+    default: BRAND,
     template: '%s | ITJAGUARS FC',
   },
-  description: 'Estadísticas y resultados del equipo ITJAGUARS FC. Goles, partidos, jugadores y más.',
-  keywords: ['futbol', 'estadísticas', 'ITJAGUARS', 'soccer', 'stats'],
   authors: [{ name: 'ITJAGUARS FC' }],
-  openGraph: {
-    title: 'ITJAGUARS FC Stats',
-    description: 'Estadísticas y resultados del equipo ITJAGUARS FC',
-    url: 'https://itjaguars.fabianms.com/',
-    siteName: 'ITJAGUARS FC Stats',
-    images: [
-      {
-        url: 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/preview.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'ITJAGUARS FC Stats Preview',
-      },
-    ],
-    locale: 'es_MX',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'ITJAGUARS FC Stats',
-    description: 'Estadísticas y resultados del equipo ITJAGUARS FC',
-    images: ['https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/preview.jpg'],
-  },
+  applicationName: BRAND,
+  manifest: '/manifest.webmanifest',
   icons: {
-    icon: 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/logo.png',
-    apple: 'https://vpl0mb2pgnbucvy2.public.blob.vercel-storage.com/logo.png',
-  },
-  robots: {
-    index: true,
-    follow: true,
+    icon: [{ url: '/brand/icon-32.png', sizes: '32x32', type: 'image/png' }],
+    apple: [{ url: '/brand/icon-180.png', sizes: '180x180', type: 'image/png' }],
   },
 }
 
@@ -79,8 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </header>
           <div id="contenido">{children}</div>
           <footer className="page-shell !py-6 flex flex-wrap justify-between gap-3 text-xs text-muted-foreground border-t"><p>© {new Date().getFullYear()} ITJAGUARS FC</p><p>Hecho para el equipo. Desde Tijuana.</p></footer>
-          <Analytics />
-          <SpeedInsights />
+          {process.env.VERCEL === '1' && <><Analytics /><SpeedInsights /></>}
         </div>
       </body>
     </html>

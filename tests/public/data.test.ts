@@ -11,7 +11,7 @@ test('maps nested detail relations, canonical team identity, kit and schedule ex
   assert.equal(match.teamSlug, 'itj')
   assert.equal(match.kit, 2)
   assert.equal(match.scheduleOverride, true)
-  assert.equal(match.goals?.[0].player.id, 'p')
+   assert.equal(match.goals?.[0].player?.id, 'p')
   const withStats = applyPlayerStats(match, { p: { callUps: 4, goals: 2 } })
   assert.equal(withStats.squad?.[0].player.callUps, 4)
   assert.equal(match.squad?.[0].player.callUps, undefined)

@@ -1,17 +1,30 @@
 export type FieldSide = 'L' | 'R' | 'C'
+export type PlayerPosition = 'GK' | 'CB' | 'WB' | 'DM' | 'CM' | 'AM' | 'W' | 'ST'
+export type PreferredSide = FieldSide | 'ANY'
+export type PlayerFoot = 'L' | 'R' | 'BOTH'
 
 export interface Player {
   id: string
   name: string
   dorsal: number
   positions: string[]
+  nickname?: string | null
+  primary_position?: PlayerPosition | null
+  secondary_positions?: PlayerPosition[]
+  preferred_side?: PreferredSide
+  foot?: PlayerFoot | null
+  active?: boolean
+  teamIds?: string[]
   callUps?: number
   goals?: number
 }
 
 export interface MatchGoal {
-  playerId: string
-  player: Player
+  id?: string
+  kind?: 'player' | 'own_goal' | 'unknown'
+  minute?: number | null
+  playerId?: string | null
+  player: Player | null
 }
 
 export interface MatchSquadEntry {
@@ -26,6 +39,8 @@ export interface Match {
   scheduleOverride?: boolean
   myTeam: string
   rivalTeam: string
+  rivalId?: string
+  rivalSlug?: string
   myPos: number
   rivalPos: number
   date: string
@@ -38,7 +53,6 @@ export interface Match {
   squad?: MatchSquadEntry[]
 }
 
-export type OpponentStrength = 'strong' | 'mid' | 'weak'
 export type FieldRole = 'gk' | 'def' | 'mid' | 'fwd'
 
 export interface Team { id: string; slug: string; name: string; match_weekday: number; league_name: string | null; sort_order: number }

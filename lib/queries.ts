@@ -1,7 +1,8 @@
 import 'server-only'
 import { cache } from 'react'
 import { supabase } from '@/lib/supabase'
-import { applyPlayerStats, mapRawMatch } from '@/lib/matches'
+import { mapPlayer, mapRawMatch } from '@/lib/matches'
+import { headToHeadCutoff } from '@/lib/public'
 import type { ClubSettings, MonthlyGoals, Player, PlayerDebt, PlayerStats, Season, SeasonStats, Team } from '@/lib/types'
 
 export const dataConfigured = Boolean(supabase)
@@ -20,9 +21,14 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
 export const getTeams = cache(async () => unwrap(await requireClient().from('team').select('*').order('sort_order').returns<Team[]>()))
 export const getSeasons = cache(async () => unwrap(await requireClient().from('season').select('*').order('startdate', { ascending: false }).returns<Season[]>()))
 export const getPlayers = cache(async (activeOnly = true) => {
-  let query = requireClient().from('Player').select('id,name,dorsal,positions').order('dorsal')
+  let query = requireClient().from('Player').select('*, player_team(team_id)').order('dorsal')
   if (activeOnly) query = query.eq('active', true)
-  return unwrap(await query.returns<Player[]>())
+  return unwrap(await query.returns<Record<string, unknown>[]>()).map((raw) => mapPlayer(raw)!)
+})
+export const getPlayer = cache(async (id: string): Promise<Player | null> => {
+  const response = await requireClient().from('Player').select('*, player_team(team_id)').eq('id', id).maybeSingle<Record<string, unknown>>()
+  if (response.error) throw new Error(response.error.message)
+  return mapPlayer(response.data)
 })
 export const getPlayerStats = cache(async () => unwrap(await requireClient().from('v_player_stats').select('*').returns<PlayerStats[]>()))
 export const getDebts = cache(async () => unwrap(await requireClient().from('v_player_debt').select('*').order('total_debt', { ascending: false }).returns<PlayerDebt[]>()))
@@ -51,13 +57,21 @@ export const getMatch = cache(async (id: string) => {
   if (response.error) throw new Error(response.error.message)
   if (!response.data) return null
   const match = mapRawMatch(response.data)
-  const [teams, rows] = await Promise.all([getTeams(), getPlayerStats()])
+  const [teams, identity] = await Promise.all([
+    getTeams(),
+    requireClient().from('v_match').select('*').eq('id', id).maybeSingle<Record<string, unknown>>(),
+  ])
+  if (identity.error) throw new Error(identity.error.message)
   const team = teams.find((item) => item.id === match.teamId)
-  const stats: Record<string, { callUps: number; goals: number }> = {}
-  for (const row of rows) {
-    const entry = stats[row.player_id] ??= { callUps: 0, goals: 0 }
-    entry.callUps += Number(row.call_ups)
-    entry.goals += Number(row.goals)
-  }
-  return applyPlayerStats({ ...match, myTeam: team?.name ?? match.myTeam, teamSlug: team?.slug }, stats)
+  return { ...match, ...(identity.data ? mapRawMatch({ ...response.data, ...identity.data }) : {}), myTeam: team?.name ?? match.myTeam, teamSlug: team?.slug }
+})
+
+/** v_head_to_head is an all-time aggregate and cannot answer a historical reference time.
+ * Compute summaries from these date-bounded v_match rows instead (past date is the completion heuristic).
+ */
+export const getHeadToHead = cache(async (rivalId: string, currentId: string, currentDate: string, teamId?: string, now = new Date().toISOString()) => {
+  let query = requireClient().from('v_match').select('*').eq('rivalId', rivalId)
+    .neq('id', currentId).lt('date', headToHeadCutoff(currentDate, new Date(now))).order('date', { ascending: false }).order('id')
+  if (teamId) query = query.eq('teamId', teamId)
+  return unwrap(await query.returns<Record<string, unknown>[]>()).map(mapRawMatch)
 })

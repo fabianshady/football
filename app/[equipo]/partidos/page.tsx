@@ -5,9 +5,10 @@ import { DataUnavailable, PageHeading } from '@/components/page-heading'
 import { TeamNavigation } from '@/components/team-navigation'
 import { SeasonSelect } from '@/components/season-select'
 import { MatchArchive } from '@/components/match-archive'
+import { teamMetadata } from '@/lib/team-metadata'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Partidos' }
+export async function generateMetadata(props: TeamPageProps) { return teamMetadata(props, 'partidos') }
 export default async function MatchesPage(props: TeamPageProps) {
   if (!dataConfigured) return <DataUnavailable />
   const { team, seasons, season } = await getTeamContext(props)
