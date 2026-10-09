@@ -1,5 +1,19 @@
 # Parent-owned database handoff
 
+## Phase 2 (applied on parent authorization)
+
+Applied remotely: **20261008235036 / phase2_players_rivals_goals**, 2026-10-08 23:50:36 UTC,
+exact parent-reviewed SQL: `supabase/migrations/20261008235036_phase2_players_rivals_goals.sql`.
+Contracts/types: `PHASE2_CONTRACT.md` and regenerated `lib/database.types.ts` (also admin repo);
+preflight/concurrency review: `PHASE2_REVIEW.md`; isolated verification: `verify_phase2.mjs`.
+Includes structured players + historical membership backfill, approved dorsals, rival identity,
+typed goal kinds, history protections, and parent-lock goal/squad/score guards.
+PGlite and remote `verify_phase2_remote.sql` rollback-only role/atomicity/compatibility tests passed;
+194 goals / 22 players / 69 matches / 667 squads / 749 payments retained; 55 rivals and 36 historical
+memberships backfilled. Corneas22/Leobardo24/Sebastian12 corrected by unique name selectors.
+No verification fixtures or historical missing goals persisted. Public 26/admin 15 tests, typing and lint passed.
+Two-session PostgreSQL check and authenticated browser flows remain pending; no app deployment by this task.
+
 ## Estado operativo actualizado
 
 Están aplicadas remotamente `20261007024919 / club_contract` y **`20261007190054 / financial_public_projection_lockdown`**. La tarea coordinadora aplicó el cierre mediante la herramienta de migraciones por solicitud del usuario, antes del despliegue de `dev`. `anon` tiene privilegio `SELECT` **false** sobre `Event` y sobre `Payment`; `v_player_debt` sanitizada sigue accesible y devolvió **14 filas** en la comprobación posterior. Ese conteo es un snapshot dinámico, no un contrato ni una garantía. No repetir el SQL aplicado.

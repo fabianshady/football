@@ -19,3 +19,4 @@ blob-report
 playwright/.auth
 tests/.auth
 *.tsbuildinfo
+resources

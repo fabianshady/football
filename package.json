@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/public/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/public/*.test.ts",
+    "prepare:brand": "node scripts/prepare-brand.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

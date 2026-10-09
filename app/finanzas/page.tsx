@@ -2,8 +2,9 @@ import { dataConfigured, getDebts, getSettings } from '@/lib/queries'
 import { DataUnavailable, EmptyState, PageHeading } from '@/components/page-heading'
 import { PaymentDetails } from '@/components/payment-details'
 import { formatCurrency } from '@/lib/utils'
+import { pageMetadata } from '@/lib/seo'
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Finanzas' }
+export const metadata = pageMetadata('Finanzas', 'Información de aportaciones y cuotas del club ITJAGUARS FC.', '/finanzas')
 export default async function FinancesPage() {
   if (!dataConfigured) return <DataUnavailable />
   const [rows, settings] = await Promise.all([getDebts(), getSettings()])

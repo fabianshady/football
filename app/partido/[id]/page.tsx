@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, MapPin, Target, Users } from 'lucide-react'
 import { ClubLogo } from '@/components/club-logo'
@@ -9,9 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MatchKit } from '@/components/match-kit'
 import { MatchScoreboard } from '@/components/match-scoreboard'
 import { parseMatchDate } from '@/lib/datetime'
-import { dataConfigured, getMatch } from '@/lib/queries'
+import { dataConfigured, getHeadToHead, getMatch, getSeasons, getTeams } from '@/lib/queries'
 import { DataUnavailable } from '@/components/page-heading'
-import { opponentStrength, strengthLabel } from '@/lib/tactics'
+import { goalLabel, priorRivalMatches } from '@/lib/public'
+import { PlayerName, PlayerPositions } from '@/components/player-identity'
+import { HeadToHead } from '@/components/head-to-head'
+import { matchDescription, pageMetadata, sportsEventJsonLd } from '@/lib/seo'
+import { JsonLd } from '@/components/json-ld'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,14 +25,12 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  if (!dataConfigured) return { title: 'Partido' }
   const { id } = await params
+  const path = `/partido/${encodeURIComponent(id)}`
+  if (!dataConfigured) return pageMetadata('Partido', 'Detalle del partido de ITJAGUARS FC.', path, '/opengraph-image', false)
   const match = await getMatch(id)
-  if (!match) return { title: 'Partido' }
-  return {
-    title: `${match.myTeam} vs ${match.rivalTeam}`,
-    description: `Detalle, convocatoria y formaciones · ${match.location}`,
-  }
+  if (!match) notFound()
+  return pageMetadata(`${match.myTeam} vs ${match.rivalTeam}`, matchDescription(match), path, `${path}/opengraph-image`)
 }
 
 export default async function MatchDetailPage({ params }: PageProps) {
@@ -36,7 +39,8 @@ export default async function MatchDetailPage({ params }: PageProps) {
   const match = await getMatch(id)
   if (!match) notFound()
 
-  const isPast = parseMatchDate(match.date) < new Date()
+  const now = new Date()
+  const isPast = parseMatchDate(match.date) < now
   const result = !isPast
     ? null
     : match.scoreHome > match.scoreAway
@@ -44,12 +48,17 @@ export default async function MatchDetailPage({ params }: PageProps) {
       : match.scoreHome < match.scoreAway
         ? 'Derrota'
         : 'Empate'
-  const strength = opponentStrength(match.rivalPos)
   const squad = match.squad ?? []
   const goals = match.goals ?? []
+  const [teams, seasons, sameTeam, previous] = await Promise.all([
+    getTeams(), getSeasons(),
+    match.rivalId && match.teamId ? getHeadToHead(match.rivalId, match.id, match.date, match.teamId, now.toISOString()) : Promise.resolve([]),
+    match.rivalId ? getHeadToHead(match.rivalId, match.id, match.date, undefined, now.toISOString()) : Promise.resolve([]),
+  ])
 
   return (
     <main className="page-shell">
+      <JsonLd value={sportsEventJsonLd(match)} />
       <Link
         href={match.teamSlug ? `/${match.teamSlug}/partidos${match.seasonid ? `?temporada=${encodeURIComponent(match.seasonid)}` : ''}` : '/'}
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -88,9 +97,6 @@ export default async function MatchDetailPage({ params }: PageProps) {
             scoreAway={match.scoreAway}
             isPast={isPast}
             size="hero"
-            rivalExtra={
-              <Badge className="bg-gold/15 text-foreground border-gold/40">{strengthLabel(strength)}</Badge>
-            }
           />
           <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-4">
             {result && (
@@ -109,22 +115,22 @@ export default async function MatchDetailPage({ params }: PageProps) {
                 <Target className="h-5 w-5 text-gold" />
                 Goles
               </CardTitle>
-              <CardDescription>Quiénes marcaron en este partido</CardDescription>
+              <CardDescription>Goles registrados a favor; el marcador puede incluir goles sin registro de autor.</CardDescription>
             </CardHeader>
             <CardContent>
               {goals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin goles registrados</p>
+                <div className="text-center"><Image src="/brand/empty-goals.webp" alt="" width={160} height={160} className="mx-auto mb-3" /><p className="text-sm text-muted-foreground">Sin goles registrados</p></div>
               ) : (
                 <ul className="space-y-2">
                   {goals.map((goal, index) => (
                     <li
-                      key={`${goal.playerId}-${index}`}
+                      key={goal.id ?? `${goal.playerId}-${index}`}
                       className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2"
                     >
                       <span className="font-medium">
-                        #{goal.player.dorsal} {goal.player.name}
+                        {goal.kind !== 'own_goal' && goal.kind !== 'unknown' && goal.player ? <Link href={`/plantilla/${encodeURIComponent(goal.player.id)}`} aria-label={`${goal.player.name}, goleador`} className="hover:underline">{goalLabel(goal)}</Link> : goalLabel(goal)}
                       </span>
-                      <Badge variant="secondary">Gol</Badge>
+                      <Badge variant="secondary">{goal.minute != null ? `${goal.minute}′` : 'Gol'}</Badge>
                     </li>
                   ))}
                 </ul>
@@ -137,7 +143,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-display text-2xl">
               <Users className="h-5 w-5 text-gold" />
-              {isPast ? 'Jugaron' : 'Convocatoria'}
+              Convocatoria
             </CardTitle>
             <CardDescription>
               {squad.length > 0
@@ -147,17 +153,14 @@ export default async function MatchDetailPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             {squad.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">Convocatoria pendiente</p>
+              <div className="text-center"><Image src="/brand/empty-lineup.webp" alt="" width={160} height={160} className="mx-auto mb-3" /><p className="text-sm text-muted-foreground italic">Convocatoria pendiente</p></div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-3">
                 {squad.map((entry) => (
-                  <Badge key={entry.player.id} variant="secondary" className="px-3 py-1.5">
-                    <span className="font-bold mr-1">#{entry.player.dorsal}</span>
-                    {entry.player.name}
-                    {entry.player.positions[0] && (
-                      <span className="ml-1.5 text-muted-foreground">{entry.player.positions[0]}</span>
-                    )}
-                  </Badge>
+                  <div key={entry.player.id} className="rounded-xl bg-muted/40 p-3">
+                    <Link href={`/plantilla/${encodeURIComponent(entry.player.id)}`} className="text-sm hover:underline"><span className="font-bold mr-1">#{entry.player.dorsal}</span><PlayerName player={entry.player} /></Link>
+                    <div className="mt-2"><PlayerPositions player={entry.player} /></div>
+                  </div>
                 ))}
               </div>
             )}
@@ -165,6 +168,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
         </Card>
       </div>
 
+      <HeadToHead sameTeam={priorRivalMatches(sameTeam, match, match.teamId, now)} club={priorRivalMatches(previous, match, '', now)} teams={teams} seasons={seasons} currentTeamId={match.teamId} />
       <FormationLab rivalPos={match.rivalPos} rivalTeam={match.rivalTeam} squad={squad} />
     </main>
   )

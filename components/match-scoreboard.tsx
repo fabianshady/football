@@ -53,9 +53,9 @@ function TeamCell({
           align === 'end' ? 'justify-end' : 'justify-start'
         )}
       >
-        {pos > 0 && <Badge variant="outline" className="text-[10px] sm:text-xs">
-          #{pos}°
-        </Badge>}
+        <Badge variant="outline" className="text-[10px] sm:text-xs">
+          {pos > 0 ? `#${pos}°` : 'Sin clasificación'}
+        </Badge>
         {extra}
       </div>
     </div>

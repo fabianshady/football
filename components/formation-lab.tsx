@@ -11,9 +11,10 @@ import {
   getFormation,
   getFormations,
   getInsight,
-  opponentStrength,
-  strengthLabel,
+  rankingLabel,
+  recommendFormation,
 } from '@/lib/tactics'
+import { PlayerName } from '@/components/player-identity'
 import type { MatchSquadEntry } from '@/lib/types'
 
 interface FormationLabProps {
@@ -26,8 +27,8 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
   const formations = getFormations()
   const [formationId, setFormationId] = useState(getDefaultFormationId())
   const formation = getFormation(formationId) ?? formations[0]
-  const strength = opponentStrength(rivalPos)
-  const insight = getInsight(formation.id, strength)
+  const insight = getInsight(formation.id)
+  const recommendation = recommendFormation(squad)
   const variants = buildLineupVariants(formation, squad)
   const [gkIndex, setGkIndex] = useState(0)
   const safeIndex = Math.min(gkIndex, Math.max(0, variants.length - 1))
@@ -39,11 +40,12 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
         <CardHeader>
            <CardTitle className="text-2xl">Probar formación</CardTitle>
           <CardDescription>
-            Fútbol 7 · portero + 6. Se acomoda por línea, lado (L)/(R) y, si empatan, por
-            convocatorias y goles.
+            Fútbol 7 · portero + 6. Propuesta para el entrenador por posiciones principales,
+            secundarias y lado preferido. No es una alineación confirmada.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {recommendation && <p className="text-sm text-muted-foreground">Mejor cobertura posicional: {recommendation.formation.name} · {recommendation.lineup.coverage}/{recommendation.formation.slots.length} puestos compatibles. Es una orientación táctica, no un pronóstico.</p>}
           <div className="flex flex-wrap gap-2">
             {formations.map((item) => (
               <button
@@ -84,7 +86,7 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
                     }`}
                   >
                     <UserRound className="h-4 w-4" />
-                    {variant.gk ? `#${variant.gk.dorsal} ${variant.gk.name}` : 'Sin portero'}
+                     {variant.gk ? <span>#{variant.gk.dorsal} <PlayerName player={variant.gk} /></span> : 'Sin portero'}
                   </button>
                 ))}
               </div>
@@ -97,13 +99,18 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
              <p className="text-sm text-muted-foreground">No hay convocatoria para armar la alineación.</p>
           )}
 
+          {current && <>
+            {current.warnings.length > 0 && <div role="status" className="rounded-xl border border-border p-3 text-sm"><p className="font-semibold mb-2">Puestos sin cubrir</p><ul className="list-disc pl-5">{current.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div>}
+            <details className="text-sm"><summary className="cursor-pointer font-semibold">Por qué encaja cada jugador</summary><ul className="space-y-2 mt-3">{formation.slots.map((slot) => <li key={slot.id}><span className="font-medium">{slot.label}: {current.assignment[slot.id] ? <PlayerName player={current.assignment[slot.id]!} /> : 'Vacante'}</span><span className="block text-xs text-muted-foreground">{current.reasons[slot.id]}</span></li>)}</ul></details>
+          </>}
+
           {current && current.bench.length > 0 && (
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Banca</p>
               <div className="flex flex-wrap gap-1.5">
                 {current.bench.map((player) => (
                   <Badge key={player.id} variant="secondary">
-                    #{player.dorsal} {player.name}
+                    #{player.dorsal} <PlayerName player={player} />
                   </Badge>
                 ))}
               </div>
@@ -119,7 +126,7 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
             Lectura táctica
           </CardTitle>
           <CardDescription>
-            {rivalTeam} va #{rivalPos}° · {strengthLabel(strength)}
+            {rivalTeam} · {rankingLabel(rivalPos)}. Ideas generales de la formación.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -157,7 +164,7 @@ export function FormationLab({ rivalPos, rivalTeam, squad }: FormationLabProps) 
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No hay insights cargados para esta formación. Edita `data/formation-insights.json`.
+              Sin notas generales para esta formación.
             </p>
           )}
         </CardContent>

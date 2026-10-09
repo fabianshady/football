@@ -1,7 +1,6 @@
-import formationsData from '@/data/formations.json'
-import aliasesData from '@/data/position-aliases.json'
-import insightsData from '@/data/formation-insights.json'
-import type { FieldRole, FieldSide, MatchSquadEntry, OpponentStrength, Player } from '@/lib/types'
+import formationsData from '../data/formations.json' with { type: 'json' }
+import { playerPositions, playerSide, positionRoles } from './public.ts'
+import type { FieldRole, FieldSide, MatchSquadEntry, Player } from './types.ts'
 
 export interface FormationSlot {
   id: string
@@ -11,7 +10,6 @@ export interface FormationSlot {
   x: number
   y: number
 }
-
 export interface FormationDef {
   id: string
   name: string
@@ -19,215 +17,133 @@ export interface FormationDef {
   summary: string
   slots: FormationSlot[]
 }
-
-export interface FormationBook {
-  defaultId: string
-  playersOnField: number
-  formations: FormationDef[]
-}
-
-export interface InsightBlock {
-  title: string
-  pros: string[]
-  cons: string[]
-}
-
+export interface FormationBook { defaultId: string; playersOnField: number; formations: FormationDef[] }
+export interface InsightBlock { title: string; pros: string[]; cons: string[] }
 export type LineupAssignment = Record<string, Player | null>
-
 export interface LineupVariant {
   gk: Player | null
   assignment: LineupAssignment
   bench: Player[]
+  score: number
+  coverage: number
+  reasons: Record<string, string>
+  warnings: string[]
 }
-
 const book = formationsData as FormationBook
-const aliases = aliasesData as Record<FieldRole, string[]>
-const insights = insightsData as Record<string, Record<OpponentStrength, InsightBlock>>
+export function getFormations(): FormationDef[] { return book.formations }
+export function getDefaultFormationId(): string { return book.defaultId }
+export function getFormation(id: string): FormationDef | undefined { return book.formations.find((formation) => formation.id === id) ?? book.formations[0] }
 
-const ROLE_ORDER: FieldRole[] = ['gk', 'def', 'mid', 'fwd']
-
-function normalizePos(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase()
+// Legacy array callers are supported, while structured player callers are canonical-first.
+function asPlayer(value: Player | string[] | undefined): Player {
+  return Array.isArray(value) || !value ? { id: '', name: '', dorsal: 0, positions: value ?? [] } : value
 }
-
-const aliasMap: Array<{ role: FieldRole; keys: Set<string> }> = ROLE_ORDER.map((role) => ({
-  role,
-  keys: new Set((aliases[role] ?? []).map(normalizePos)),
-}))
-
-export function getFormations(): FormationDef[] {
-  return book.formations
+export function classifyRole(value: Player | string[] | undefined): FieldRole | null {
+  return positionRoles(playerPositions(asPlayer(value))[0])[0] ?? null
 }
-
-export function getDefaultFormationId(): string {
-  return book.defaultId
+export function preferredSide(value: Player | string[] | undefined): FieldSide | null {
+  const side = playerSide(asPlayer(value))
+  return side === 'ANY' ? null : side
 }
-
-export function getFormation(id: string): FormationDef | undefined {
-  return book.formations.find((f) => f.id === id) ?? book.formations[0]
+export function isGoalkeeper(value: Player | string[] | undefined): boolean {
+  return playerPositions(asPlayer(value)).includes('GK')
 }
-
-export function opponentStrength(rivalPos: number | null | undefined): OpponentStrength {
-  if (rivalPos == null || Number.isNaN(rivalPos)) return 'mid'
-  if (rivalPos <= 10) return 'strong'
-  if (rivalPos <= 20) return 'mid'
-  return 'weak'
-}
-
-export function strengthLabel(strength: OpponentStrength): string {
-  if (strength === 'strong') return 'Equipo fuerte'
-  if (strength === 'weak') return 'Equipo débil'
-  return 'Equipo intermedio'
-}
-
-const SIDE_MARK = /\(\s*(l|r|c|i|izq\.?|der\.?|cen\.?|centro)\s*\)\s*$/i
-
-function roleKeyFromPosition(value: string): string {
-  return normalizePos(value.replace(SIDE_MARK, ''))
-}
-
-/** Reads `(L)` / `(R)` / `(C)` from the position that defines the player's line. */
-export function preferredSide(positions: string[] | undefined): FieldSide | null {
-  if (!positions?.length) return null
-  for (const pos of positions) {
-    const mark = pos.match(SIDE_MARK)
-    if (!mark) continue
-    const token = mark[1].toLowerCase()
-    if (token === 'l' || token === 'i' || token.startsWith('izq')) return 'L'
-    if (token === 'r' || token.startsWith('der')) return 'R'
-    return 'C'
-  }
-  return null
-}
-
-export function classifyRole(positions: string[] | undefined): FieldRole | null {
-  if (!positions?.length) return null
-  for (const pos of positions) {
-    const key = roleKeyFromPosition(pos)
-    for (const entry of aliasMap) {
-      if (entry.keys.has(key)) return entry.role
-    }
-  }
-  return null
-}
-
 export function slotSide(slot: FormationSlot): FieldSide {
-  if (slot.side) return slot.side
-  if (slot.x < 40) return 'L'
-  if (slot.x > 60) return 'R'
-  return 'C'
+  return slot.side ?? (slot.x < 40 ? 'L' : slot.x > 60 ? 'R' : 'C')
 }
-
-export function isGoalkeeper(positions: string[] | undefined): boolean {
-  if (!positions?.length) return false
-  const gkKeys = aliasMap.find((entry) => entry.role === 'gk')?.keys
-  if (!gkKeys) return false
-  return positions.some((pos) => gkKeys.has(roleKeyFromPosition(pos)))
+export function rankingLabel(position: number | null | undefined): string {
+  return position && Number.isFinite(position) && position > 0 ? `Posición #${position}°` : 'Sin clasificación'
 }
-
-export function getInsight(formationId: string, strength: OpponentStrength): InsightBlock | null {
-  return insights[formationId]?.[strength] ?? null
-}
-
-function neighborRoles(role: FieldRole): FieldRole[] {
-  switch (role) {
-    case 'gk':
-      return ['def']
-    case 'def':
-      return ['mid', 'gk']
-    case 'mid':
-      return ['def', 'fwd']
-    case 'fwd':
-      return ['mid']
+export function getInsight(formationId: string): InsightBlock | null {
+  if (formationId === '2-3-1') return {
+    title: 'Amplitud y apoyos en el medio',
+    pros: ['Tres medios ofrecen apoyos para circular el balón.', 'Los interiores pueden ocupar los costados.'],
+    cons: ['Coordinar las subidas para cubrir a los dos defensas.', 'Acompañar al delantero para que no quede aislado.'],
   }
+  if (formationId === '3-2-1') return {
+    title: 'Cobertura y doble pivote',
+    pros: ['Tres defensas ofrecen una línea adicional de cobertura.', 'El doble pivote puede repartirse los apoyos centrales.'],
+    cons: ['La amplitud requiere movimientos de defensas o medios.', 'Conectar con el delantero requiere apoyos cercanos.'],
+  }
+  return null
 }
 
-function roleFit(playerRole: FieldRole | null, slotRole: FieldRole): number {
-  if (playerRole === slotRole) return 2
-  if (playerRole && neighborRoles(slotRole).includes(playerRole)) return 1
-  return 0
-}
-
-function sideFit(playerSide: FieldSide | null, needed: FieldSide): number {
-  const side = playerSide ?? 'C'
-  if (needed === 'C') return side === 'C' ? 2 : 1
-  if (side === needed) return 2
-  if (side === 'C') return 1
-  return 0
-}
-
-function compareStarters(a: Player, b: Player): number {
-  const callUps = (b.callUps ?? 0) - (a.callUps ?? 0)
-  if (callUps !== 0) return callUps
-  const goals = (b.goals ?? 0) - (a.goals ?? 0)
-  if (goals !== 0) return goals
-  return a.dorsal - b.dorsal
-}
-
-function pickPlayer(pool: Player[], slot: FormationSlot, used: Set<string>): Player | null {
-  const available = pool.filter((p) => !used.has(p.id))
-  if (available.length === 0) return null
+/** Only declared positions in this band are eligible; a vacancy is preferable to an invented role. */
+export function slotFit(player: Player, slot: FormationSlot): { score: number; reason: string } | null {
+  const positions = playerPositions(player)
+  const index = positions.findIndex((position) => positionRoles(position).includes(slot.role))
+  if (index < 0) return null
+  const side = playerSide(player)
   const needed = slotSide(slot)
-  return [...available].sort((a, b) => {
-    const roleDiff =
-      roleFit(classifyRole(b.positions), slot.role) - roleFit(classifyRole(a.positions), slot.role)
-    if (roleDiff !== 0) return roleDiff
-    const sideDiff = sideFit(preferredSide(b.positions), needed) - sideFit(preferredSide(a.positions), needed)
-    if (sideDiff !== 0) return sideDiff
-    return compareStarters(a, b)
-  })[0]
+  const sideScore = slot.role === 'gk' || side === 'ANY' ? 0 : side === needed ? 6 : -6
+  const reason = `${index === 0 ? 'Posición principal' : 'Posición secundaria'}${positions[index] === 'WB' ? ' · carrilero compatible con defensa y medio' : ''}${slot.role === 'gk' ? '' : side === 'ANY' ? ' · lado libre' : side === needed ? ' · lado preferido' : ' · otro lado'}`
+  return { score: (index === 0 ? 40 : 30) + sideScore, reason }
 }
-
+function comparePlayers(a: Player, b: Player): number { return a.id.localeCompare(b.id) || a.name.localeCompare(b.name, 'es') }
 export function squadPlayers(squad: MatchSquadEntry[] | undefined): Player[] {
-  if (!squad) return []
-  const seen = new Set<string>()
-  const players: Player[] = []
-  for (const entry of squad) {
-    const player = entry.player
-    if (!player?.id || seen.has(player.id)) continue
-    seen.add(player.id)
-    players.push({
-      id: player.id,
-      name: player.name,
-      dorsal: player.dorsal,
-      positions: player.positions ?? [],
-      callUps: player.callUps ?? 0,
-      goals: player.goals ?? 0,
-    })
-  }
-  return players
+  const players = new Map<string, Player>()
+  for (const { player } of squad ?? []) if (player?.id && !players.has(player.id)) players.set(player.id, { ...player })
+  return [...players.values()].sort(comparePlayers)
 }
+export function goalkeepersInSquad(players: Player[]): Player[] { return players.filter(isGoalkeeper).sort(comparePlayers) }
 
-export function goalkeepersInSquad(players: Player[]): Player[] {
-  return players.filter((p) => isGoalkeeper(p.positions))
-}
-
+/** Player-stream DP over slot masks: O(n * slots * 2^slots), no permutations.
+ * Every occupied slot contributes a large coverage bonus; every vacancy carries a penalty.
+ * Stable ID/name order resolves equal scores without career, dorsal, or scoring biases.
+ */
 export function buildLineup(formation: FormationDef, players: Player[], gk: Player | null): LineupVariant {
-  const used = new Set<string>()
-  const assignment: LineupAssignment = {}
-
-  for (const slot of formation.slots) {
-    if (slot.role === 'gk') {
-      assignment[slot.id] = gk
-      if (gk) used.add(gk.id)
-      continue
+  const pool = squadPlayers(players.map((player) => ({ player })))
+  const keeper = gk ? pool.find((player) => player.id === gk.id && isGoalkeeper(player)) ?? null : null
+  const slots = formation.slots
+  type State = { score: number; picks: (Player | null)[] }
+  const dp: (State | undefined)[] = Array(1 << slots.length)
+  dp[0] = { score: 0, picks: slots.map(() => null) }
+  for (const player of pool) {
+    for (let mask = dp.length - 1; mask >= 0; mask--) {
+      const state = dp[mask]
+      if (!state) continue
+      for (let index = 0; index < slots.length; index++) {
+        if (mask & (1 << index)) continue
+        const slot = slots[index]
+        if (slot.role === 'gk' ? player.id !== keeper?.id : player.id === keeper?.id) continue
+        const fit = slotFit(player, slot)
+        if (!fit) continue
+        const next = mask | (1 << index)
+        const score = state.score + 1000 + fit.score
+        if (!dp[next] || score > dp[next]!.score) {
+          const picks = [...state.picks]
+          picks[index] = player
+          dp[next] = { score, picks }
+        }
+      }
     }
-    const picked = pickPlayer(players, slot, used)
-    assignment[slot.id] = picked
-    if (picked) used.add(picked.id)
   }
-
-  const bench = players.filter((p) => !used.has(p.id))
-  return { gk, assignment, bench }
+  let best = dp[0]!
+  let bestScore = -1000 * slots.length
+  for (const state of dp) {
+    if (!state) continue
+    const score = state.score - state.picks.filter((player) => !player).length * 1000
+    if (score > bestScore) { best = state; bestScore = score }
+  }
+  const assignment: LineupAssignment = {}
+  const reasons: Record<string, string> = {}
+  const warnings: string[] = []
+  const used = new Set<string>()
+  slots.forEach((slot, index) => {
+    const player = best.picks[index]
+    assignment[slot.id] = player
+    reasons[slot.id] = player ? slotFit(player, slot)!.reason : 'Vacante: sin jugador con posición compatible'
+    if (player) used.add(player.id)
+    else warnings.push(`${slot.label}: falta ${slot.role === 'gk' ? 'un portero declarado' : 'un jugador compatible'}.`)
+  })
+  return { gk: keeper, assignment, bench: pool.filter((player) => !used.has(player.id)), score: bestScore, coverage: used.size, reasons, warnings }
 }
-
 export function buildLineupVariants(formation: FormationDef, squad: MatchSquadEntry[] | undefined): LineupVariant[] {
   const players = squadPlayers(squad)
   const keepers = goalkeepersInSquad(players)
-  const gkOptions = keepers.length > 0 ? keepers : [null]
-  return gkOptions.map((gk) => buildLineup(formation, players, gk))
+  return (keepers.length ? keepers : [null]).map((keeper) => buildLineup(formation, players, keeper))
+}
+export function recommendFormation(squad: MatchSquadEntry[] | undefined, formations = getFormations()): { formation: FormationDef; lineup: LineupVariant } | null {
+  const candidates = formations.flatMap((formation) => buildLineupVariants(formation, squad).map((lineup) => ({ formation, lineup })))
+  return candidates.sort((a, b) => b.lineup.score - a.lineup.score || a.formation.id.localeCompare(b.formation.id) || (a.lineup.gk?.id ?? '').localeCompare(b.lineup.gk?.id ?? ''))[0] ?? null
 }
