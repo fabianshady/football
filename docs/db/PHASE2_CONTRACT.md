@@ -4,7 +4,7 @@
 
 Migration: `supabase/migrations/20261008235036_phase2_players_rivals_goals.sql`, remote name `phase2_players_rivals_goals`. The reviewed 447-line SQL was applied exactly; its original preparation header is preserved as provenance. Local filename now matches remote history.
 Dependencies: the two already-applied `20261007024919` / `20261007190054` migrations.
-Types regenerated via Supabase after application and persisted, condensed, in `football/lib/database.types.ts` and `app_futbol/src/lib/database.types.ts`. Actual inferred rival→v_match relationships replaced prepared guesses. `CHECK`-constrained text is used throughout; there are no PostgreSQL enums. Exported unions and nullable RPC arguments are documented manual refinements of generated string/nonnullable-argument types. The generator permits `normalized_name` string writes in types, but SQL's generated column rejects them; clients must omit it.
+Types regenerated via Supabase after application and persisted, condensed, in `football_public/lib/database.types.ts` and `app_futbol/src/lib/database.types.ts`. Actual inferred rival→v_match relationships replaced prepared guesses. `CHECK`-constrained text is used throughout; there are no PostgreSQL enums. Exported unions and nullable RPC arguments are documented manual refinements of generated string/nonnullable-argument types. The generator permits `normalized_name` string writes in types, but SQL's generated column rejects them; clients must omit it.
 
 ## Players
 

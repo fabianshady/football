@@ -1,6 +1,6 @@
 # ITJAGUARS FC · Sitio público
 
-Sitio en español para consultar equipos, partidos, estadísticas, plantilla y aportaciones pendientes del club. Este repositorio (`football`) contiene la aplicación pública; [football-admin](https://github.com/fabianshady/football-admin) contiene la administración (carpeta local `../app_futbol`). Ambas aplicaciones comparten el mismo proyecto Supabase.
+Sitio en español para consultar equipos, partidos, estadísticas, plantilla y aportaciones pendientes del club. Este repositorio contiene la aplicación pública (carpeta local `football_public`; el remoto en GitHub sigue llamándose `football`); [football-admin](https://github.com/fabianshady/football-admin) contiene la administración (carpeta local `../app_futbol`). Ambas aplicaciones comparten el mismo proyecto Supabase.
 
 ## Requisitos y arranque
 
@@ -57,7 +57,8 @@ Cada ruta pública declara título, descripción, canonical, Open Graph y Twitte
 
 Las seis imágenes aportadas en `resources/` son fuentes de edición. `npm run prepare:brand` genera las versiones optimizadas de `public/brand/`, iconos y fondos OG. Ver [inventario, reproducción y reglas SEO](docs/design/ASSETS.md).
 
-- Next.js 16.1.6 App Router, React 19 y TypeScript.
+- Next.js 16.4.4 App Router, React 19 y TypeScript.
+- Actualización de seguridad y verificación de dependencias: [SECURITY_UPDATE.md](docs/SECURITY_UPDATE.md). `npm audit --omit=dev` devuelve 0 avisos de producción; la auditoría completa conserva avisos moderados solo de desarrollo (ver ese documento). CI ejecuta ambos comandos.
 - Tailwind CSS 4: tokens y estilos en `app/globals.css`, sin configuración legacy de Tailwind.
 - `app/`: rutas y estados de carga, error y no encontrado.
 - `components/`: navegación, tema, partidos, plantilla, finanzas y gráficos SVG.
@@ -74,6 +75,8 @@ Las listas leen `v_match`, `v_team_season_stats`, `v_team_season_monthly`, `v_pl
 Los partidos se guardan como instantes UTC y se muestran principalmente en **America/Tijuana**, con horario de verano real. La zona del visitante aparece como información secundaria. No usar un desplazamiento UTC fijo ni deducir la fecha local a partir del día UTC.
 
 Para eventos financieros de fecha única, el admin convierte el día seleccionado a **mediodía de Tijuana** y almacena el instante UTC. El admin los presenta con `formatCalendarDate` en Tijuana; `/finanzas` público actualmente formatea el instante con `Intl.DateTimeFormat` en UTC. Los eventos nuevos guardados a mediodía conservan el mismo día en ambas zonas; esto no garantiza que cualquier timestamp histórico arbitrario represente el mismo día local.
+
+En el detalle de partido, la convocatoria se muestra compacta: una fila por jugador ordenada por dorsal, con dorsal, nombre como dato principal y la posición principal como dato secundario.
 
 Las estadísticas de resultados consideran partidos con fecha pasada. El esquema no contiene un estado de finalización: un partido pasado sin jugar con marcador 0–0 puede contar como empate.
 
@@ -94,7 +97,17 @@ npm test
 npm run build
 ```
 
-`typecheck` genera los tipos de rutas de Next antes de ejecutar TypeScript. `npm test` ejecuta `tests/public/*.test.ts` con el runner de Node 22 y cubre fechas/DST, mapeo, selección de temporada y tema. Para servir una compilación local: `npm run start`.
+`typecheck` genera los tipos de rutas de Next antes de ejecutar TypeScript. `npm test` ejecuta `tests/public/*.test.ts` con el runner de Node 22 (26 tests) y cubre fechas/DST, mapeo, selección de temporada y tema.
+
+Auditoría de dependencias (tras `npm ci`):
+
+```sh
+npm audit --omit=dev                 # esperado: 0 vulnerabilidades
+npm audit --audit-level=high         # sale con 0, pero imprime 16 avisos moderados
+npm audit                            # sale con 1 mientras existan esos avisos
+```
+
+El último comando falla hoy y no se ignora; ver [SECURITY_UPDATE.md](docs/SECURITY_UPDATE.md). Para servir una compilación local: `npm run start`.
 
 La [verificación de navegador de solo lectura](tests/e2e/README.md) describe requisitos, comandos, cobertura y evidencia. Necesita Playwright instalado externamente y configuración Supabase real; no forma parte de `npm test`.
 
@@ -109,7 +122,7 @@ Workflows actuales:
 
 | Workflow | Disparador y función |
 | --- | --- |
-| `ci.yml` | PR hacia `main`: lint, tipos, tests y build con Node 22. |
+| `ci.yml` | Push a `dev` y PR hacia `main`: lint, tipos, tests, build y auditorías con Node 22. |
 | `predeploy.yml` | Push a `main`: repite las comprobaciones. Solo bloquea Vercel si se configura como check requerido en el proveedor. |
 | `docker.yml` | Push a `main`: publica `linux/arm64` en GHCR como `app_futbol_public`, etiquetas `latest` y SHA corto. |
 

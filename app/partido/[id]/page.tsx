@@ -12,8 +12,8 @@ import { MatchScoreboard } from '@/components/match-scoreboard'
 import { parseMatchDate } from '@/lib/datetime'
 import { dataConfigured, getHeadToHead, getMatch, getSeasons, getTeams } from '@/lib/queries'
 import { DataUnavailable } from '@/components/page-heading'
-import { goalLabel, priorRivalMatches } from '@/lib/public'
-import { PlayerName, PlayerPositions } from '@/components/player-identity'
+import { goalLabel, playerPositions, POSITION_LABELS, priorRivalMatches } from '@/lib/public'
+import { PlayerName } from '@/components/player-identity'
 import { HeadToHead } from '@/components/head-to-head'
 import { matchDescription, pageMetadata, sportsEventJsonLd } from '@/lib/seo'
 import { JsonLd } from '@/components/json-ld'
@@ -155,14 +155,20 @@ export default async function MatchDetailPage({ params }: PageProps) {
             {squad.length === 0 ? (
               <div className="text-center"><Image src="/brand/empty-lineup.webp" alt="" width={160} height={160} className="mx-auto mb-3" /><p className="text-sm text-muted-foreground italic">Convocatoria pendiente</p></div>
             ) : (
-              <div className="space-y-3">
-                {squad.map((entry) => (
-                  <div key={entry.player.id} className="rounded-xl bg-muted/40 p-3">
-                    <Link href={`/plantilla/${encodeURIComponent(entry.player.id)}`} className="text-sm hover:underline"><span className="font-bold mr-1">#{entry.player.dorsal}</span><PlayerName player={entry.player} /></Link>
-                    <div className="mt-2"><PlayerPositions player={entry.player} /></div>
-                  </div>
-                ))}
-              </div>
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {[...squad].sort((a, b) => a.player.dorsal - b.player.dorsal).map((entry) => {
+                  const primary = playerPositions(entry.player)[0]
+                  return (
+                    <li key={entry.player.id}>
+                      <Link href={`/plantilla/${encodeURIComponent(entry.player.id)}`} className="flex min-h-11 items-center gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted">
+                        <span className="w-7 shrink-0 text-right font-bold tabular-nums text-muted-foreground">{entry.player.dorsal}</span>
+                        <span className="min-w-0 flex-1 truncate font-medium"><PlayerName player={entry.player} /></span>
+                        {primary && <span className="shrink-0 text-xs text-muted-foreground">{POSITION_LABELS[primary]}</span>}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
             )}
           </CardContent>
         </Card>
