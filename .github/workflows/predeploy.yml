@@ -38,6 +38,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit production dependencies
+        run: npm audit --omit=dev
+
+      - name: Audit high and critical issues in all dependencies
+        run: npm audit --audit-level=high
+
       - name: Lint
         run: npm run lint
 
